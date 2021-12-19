@@ -118,7 +118,9 @@ func (command MicroserviceExampleStartCommand) Proceed(subaction string, args []
 	appInstance.GetAuthAdapterRegistry().RegisterNewAdapter(&interfaces3.TokenAuthProvider{})
 	microservice := &MicroserviceExample{Microservice: core.Microservice{
 		Port: 8089, AuthBackend: "token", Name: "Example microservice",
-		Prefix: "ExampleMicroservice", SwaggerPort: 8090,
+		Prefix: "ExampleMicroservice", SwaggerPort: 8090, ServiceSwaggerDefinition: &core.ServiceSwaggerDefinition{
+			BasePath: "/v3",
+		},
 	}}
 	if opts.StartSwagger {
 		return microservice.StartSwagger(appInstance)
