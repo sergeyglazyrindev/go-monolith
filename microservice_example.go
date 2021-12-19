@@ -1,45 +1,3 @@
-//     Schemes: http, https
-//     Host: localhost
-//     BasePath: /v2
-//     Version: 0.0.1
-//     License: MIT http://opensource.org/licenses/MIT
-//     Contact: John Doe<john.doe@example.com> http://john.doe.com
-//
-//     Consumes:
-//     - application/json
-//     - application/xml
-//
-//     Produces:
-//     - application/json
-//     - application/xml
-//
-//     Security:
-//     - api_key:
-//
-//     SecurityDefinitions:
-//     api_key:
-//          type: apiKey
-//          name: KEY
-//          in: header
-//     oauth2:
-//         type: oauth2
-//         authorizationUrl: /oauth2/auth
-//         tokenUrl: /oauth2/token
-//         in: header
-//         scopes:
-//           bar: foo
-//         flow: accessCode
-//
-//     Extensions:
-//     x-meta-value: value
-//     x-meta-array:
-//       - value1
-//       - value2
-//     x-meta-array-obj:
-//       - name: obj
-//         value: field
-//
-// swagger:meta
 package gomonolith
 
 import (
@@ -119,7 +77,21 @@ func (command MicroserviceExampleStartCommand) Proceed(subaction string, args []
 	microservice := &MicroserviceExample{Microservice: core.Microservice{
 		Port: 8089, AuthBackend: "token", Name: "Example microservice",
 		Prefix: "ExampleMicroservice", SwaggerPort: 8090, ServiceSwaggerDefinition: &core.ServiceSwaggerDefinition{
-			BasePath: "/v3",
+			BasePath: "/v3", Host: "localhost", Schemes: []string{"http", "https"}, Info: &core.ServiceSwaggerDefinitionInfo{
+				Version: "0.0.1",
+				Contact: &core.ServiceSwaggerDefinitionInfoContact{
+					Name:  "Sergey Glazyrin",
+					URL:   "https://github.com/sergeyglazyrindev/go-monolith",
+					Email: "sergey.glazyrin.dev@gmail.com",
+				},
+				License: &core.ServiceSwaggerDefinitionInfoLicense{
+					Name: "MIT",
+					URL:  "http://opensource.org/licenses/MIT",
+				},
+			},
+			Consumes:       []string{"application/json", "application/xml"},
+			Produces:       []string{"application/json", "application/xml"},
+			SwaggerVersion: "2.0",
 		},
 	}}
 	if opts.StartSwagger {

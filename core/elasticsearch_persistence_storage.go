@@ -70,7 +70,7 @@ func NewElasticSearchAdminPage(parentPage *AdminPage, modelI interface{}, genera
 				ESQuerySet:          esQuerySet,
 				PaginatedESQuerySet: paginatedQuerySet1,
 				Model:               modelI3,
-				DatabaseInstance:      database,
+				DatabaseInstance:    database,
 				SearchBy:            make([]*ESSearchParam, 0),
 			}
 			if adminRequestParams != nil && adminRequestParams.RequestURL != "" {

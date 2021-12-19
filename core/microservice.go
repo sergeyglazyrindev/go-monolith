@@ -3,6 +3,7 @@ package core
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/davecgh/go-spew/spew"
 	"github.com/gin-gonic/gin"
 	"io"
 	"io/ioutil"
@@ -11,36 +12,53 @@ import (
 	"os/exec"
 )
 
+type ServiceSwaggerDefinitionInfoContact struct {
+	Name  string `json:"name"`
+	URL   string `json:"url"`
+	Email string `json:"email"`
+}
+
+type ServiceSwaggerDefinitionInfoLicense struct {
+	Name string `json:"name"`
+	URL  string `json:"url"`
+}
+
+type ServiceSwaggerDefinitionInfo struct {
+	Contact *ServiceSwaggerDefinitionInfoContact `json:"contact"`
+	License *ServiceSwaggerDefinitionInfoLicense `json:"license"`
+	Version string                               `json:"version"`
+}
+
 type ServiceSwaggerDefinition struct {
-	Consumes []string `json:"consumes"`
-	Produces []string `json:"produces"`
-	Schemes []string `json:"schemes"`
-	SwaggerVersion string `json:"swagger"`
-	Info* struct {
-		Contact* struct {
-			Name string `json:"name"`
-			URL string `json:"url"`
-			Email string `json:"email"`
-		} `json:"contact"`
-		License* struct {
-			Name string `json:"name"`
-			URL string `json:"url"`
-		} `json:"license"`
-		Version string `json:"version"`
-	} `json:"info"`
-	Host string `json:"host"`
-	BasePath string `json:"basePath"`
+	Consumes       []string                      `json:"consumes"`
+	Produces       []string                      `json:"produces"`
+	Schemes        []string                      `json:"schemes"`
+	SwaggerVersion string                        `json:"swagger"`
+	Info           *ServiceSwaggerDefinitionInfo `json:"info"`
+	Host           string                        `json:"host"`
+	BasePath       string                        `json:"basePath"`
 }
 
 type Microservice struct {
-	Name        string
-	Prefix      string
-	AuthBackend string
-	URLPrefix   string
-	Port        int
-	SwaggerPort int
-	IncludeTags []string
+	Name                     string
+	Prefix                   string
+	AuthBackend              string
+	URLPrefix                string
+	Port                     int
+	SwaggerPort              int
+	IncludeTags              []string
 	ServiceSwaggerDefinition *ServiceSwaggerDefinition
+}
+
+func NewServiceSwaggerDefinition() *ServiceSwaggerDefinition {
+	return &ServiceSwaggerDefinition{
+		Schemes: make([]string, 0), Info: &ServiceSwaggerDefinitionInfo{
+			Contact: &ServiceSwaggerDefinitionInfoContact{},
+			License: &ServiceSwaggerDefinitionInfoLicense{},
+		},
+		Consumes: make([]string, 0),
+		Produces: make([]string, 0),
+	}
 }
 
 func (m Microservice) RegisterEndpoints(app IApp) *gin.Engine {
@@ -113,9 +131,7 @@ func (m Microservice) StartSwagger(app IApp) error {
 		return err
 	}
 	if m.ServiceSwaggerDefinition != nil {
-		generatedJSON, _ := os.ReadFile(file.Name())
-		currentServiceDefinition := &ServiceSwaggerDefinition{}
-		json.Unmarshal(generatedJSON, currentServiceDefinition)
+		currentServiceDefinition := NewServiceSwaggerDefinition()
 		if m.ServiceSwaggerDefinition.Produces != nil {
 			currentServiceDefinition.Produces = m.ServiceSwaggerDefinition.Produces
 		}
@@ -183,7 +199,7 @@ if __name__ == '__main__':
 		commandToExecute = exec.Command(
 			"python", filePython.Name(), file.Name(), fileWithUpdatedDefinition.Name(),
 		)
-		generatedJSON, _ = json.Marshal(currentServiceDefinition)
+		generatedJSON, _ := json.Marshal(currentServiceDefinition)
 		fileWithUpdatedDefinition.Write(generatedJSON)
 		commandToExecute.Stderr = os.Stderr
 		if err1 = commandToExecute.Start(); err1 != nil {
@@ -194,7 +210,7 @@ if __name__ == '__main__':
 			log.Fatal(err1)
 			return err1
 		}
-		// spew.Dump("dsadasdas", currentServiceDefinition)
+		spew.Dump("dsadasdas", file.Name())
 	}
 	commandToExecute = exec.Command(
 		"swagger", "serve", "--flavor=swagger", "--no-open",

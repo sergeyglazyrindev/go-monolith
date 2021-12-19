@@ -69,8 +69,8 @@ type Field struct {
 	Populate            func(field *Field, m interface{}) interface{}
 	Initial             interface{}
 	WidgetType          string
-	SetUpField      func(w IWidget, modelI interface{}, v interface{}, afo IAdminFilterObjects) error
-	Ordering        int
+	SetUpField          func(w IWidget, modelI interface{}, v interface{}, afo IAdminFilterObjects) error
+	Ordering            int
 }
 
 func (f *Field) ProceedForm(form *multipart.Form, afo IAdminFilterObjects, renderContext *FormRenderContext) ValidationError {
