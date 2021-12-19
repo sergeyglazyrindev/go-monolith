@@ -1,0 +1,14 @@
+<ul{{ if .Id }} id="{{ .Id }}"{{ end }}{{ if .Attrs.class }} class="{{ .Attrs.class }}"{{ end }}>
+  {{ $groupIndex := 0 }}
+  {{ $radioId := $.Id }}
+  {{ range $groupName, $groupChoices := .OptGroups }}
+    {{ if $groupName }}<li>{{ Translate $groupName }}<ul{{ if $radioId }} id="{{ $radioId }}_{{ $groupIndex }}"{{ end }}>{{ end }}
+      {{ range $i, $option := $groupChoices }}
+        <li>{{Include $option.OptionTemplateName $option }}</li>
+      {{end}}
+    {{ if $groupName }}
+      </ul></li>
+    {{end}}
+    {{ $groupIndex = (add $groupIndex 1) }}
+  {{end}}
+</ul>

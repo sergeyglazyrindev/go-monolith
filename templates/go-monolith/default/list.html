@@ -1,0 +1,257 @@
+{{Include "header"}}
+{{Include "header-bar"}}
+<style type="text/css">
+    input[type="checkbox"].form-control {
+        height: auto;
+    }
+</style>
+{{ $Language := .Language }}
+<div class="container-fluid main-content admin-page">
+    <div class="col-xs-12 justify-content-md-center" style="position:relative;padding:0px;margin:0px 0px 0px 0px; bottom:65px; top:30px;">
+        {{ if .Message }}
+        <div class="uadmin-alert alert alert-info">
+            <strong><i class="fa fa-info-circle fa-2x"></i></strong>&nbsp;&nbsp;<span>{{Tf $Language.Code .Message }}</span>
+        </div>
+        {{ end }}
+        {{ if .Error }}
+        <div class="uadmin-alert alert alert-danger">
+            <strong><i class="fa fa-info-circle fa-2x"></i></strong>&nbsp;&nbsp;<span>{{Tf $Language.Code .Error.Error }}</span>
+        </div>
+        {{ end }}
+        <div class="col-xs-9 col-sm-8" style="padding:0px;">
+            <form method="GET" id="search-form">
+                <div id="search_box" class="input-group search" style="float:left;">
+                    <input type="text" class="form-control camelcaseFixPlaceHolder"
+                           id="search" name="search" placeholder="{{Tf $Language.Code "Search" }}..." value="{{ .Search }}">
+                    <span class="input-group-addon"><i class="fa fa-search fa-fw"></i></span>
+                </div>
+                {{ if .Search }}
+                    <a href="javascript:void(0)" onclick="$('#search').val('');$('#search-form').submit();">{{Tf $Language.Code "Clear" }}</a>
+                {{ end }}
+            </form>
+        </div>
+        {{$initialOrderList := .InitialOrderList }}
+        {{$initialOrder := .InitialOrder }}
+        {{$userObject := .GetUserObject }}
+        {{$adminPage := .AdminPage }}
+        <div class="col-xs-3 col-sm-4" style="padding:0px;">
+            {{ if .PermissionForBlueprint.HasAddPermission }}
+                {{ if not .NoPermissionToAddNew }}
+                    <a class="btn btn-primary search pull-right" href="{{.CurrentURL}}/edit/new/">
+                        <i class="fa fa-plus"></i>
+                    </a>
+                {{ end }}
+            {{ end }}
+        </div>
+        {{ if .AdminModelActionRegistry.IsThereAnyActions }}
+            <form method="POST" id="action-form">
+                <input type="hidden" name="csrf-token" value="{{CSRF .SessionKey}}" />
+                <input type="hidden" name="object_ids" value="" />
+                <div class="col-xs-12" style="padding:0px;margin:0px;margin-top:5px;" >
+                    <select class="form-control" id="model-actions">
+                        <option>{{Tf $Language.Code "Choose action" }}</option>
+                        {{ end }}
+
+                        {{ range $adminModelAction := .AdminModelActionRegistry.GetAllModelActionsForUser $userObject $adminPage }}
+                        {{ if $adminModelAction.Placement.ShowOnTheListPage }}
+                        <option {{ if $adminModelAction.RequiresExtraSteps }}data-extrasteps="1"{{ end }} name="{{ $adminModelAction.SlugifiedActionName }}" data-description="{{ $adminModelAction.Description }}" data-method="{{ $adminModelAction.RequestMethod }}">{{Tf $Language.Code $adminModelAction.ActionName }}</option>
+                        {{ end }}
+                        {{ end }}
+
+                        {{ if .AdminModelActionRegistry.IsThereAnyActions }}
+                    </select><button type="submit" class="button" title="Run the selected action" name="index" value="0">Go</button>
+                    <span class="action-description"></span>
+                </div>
+            </form>
+        {{ end }}
+        <div class="col-xs-12" style="padding:0px;margin:0px;margin-top:5px;" >
+            <div class="{{if not .ListFilter.IsEmpty}}col-sm-10{{else}}col-sm-12{{end}} main-content2" style="margin:0px;padding:0px;overflow-x:auto;">
+                {{ if .ListDisplay.IsThereAnyEditable }}
+                    {{ if .ListEditableFormError }}
+                        <div class="alert alert-warning">
+                            <strong><i class="fa fa-info-circle fa-2x"></i></strong>&nbsp;&nbsp;<span>There was some error, so no changed were saved</span>
+                        </div>
+                    {{ end }}
+                    <form method="POST" enctype="multipart/form-data">
+                        <input type="hidden" name="csrf-token" value="{{CSRF .SessionKey}}" />
+                {{ end }}
+                <table style="margin:0px;padding:0px;width:100%;" id="listtable" class="table table-striped  table-bordered  table-hover table-condensed float-header">
+                    <thead class="admin_font" >
+                    <tr class="table-header capitalized">
+                        <th class="checkbox-container">
+                            <input class="main_check" type="checkbox">
+                        </th>
+                        {{range .ListDisplay.GetAllFields}}
+                            <th class="trigger_desc pointer" ><a href="{{ if .IsEligibleForOrdering }}?initialOrder={{$initialOrder}}&o={{.GetOrderingName $initialOrderList}}{{ end }}" class="camelcaseFix">{{ GetDisplayName .DisplayName}}</a>
+                                <span class="fa-stack fa-fw pull-right">
+                                    <i class="fontdarkgray fa fa-sort-asc fa-stack-1x"></i>
+                                    <i class="fontdarkgray fa fa-sort-desc fa-stack-1x"></i>
+                                </span>
+                            </th>
+                        {{end}}
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {{$listDisplay := .ListDisplay}}
+                    {{$currentURL := .CurrentURL}}
+                    {{$currentAdminContext := .CurrentAdminContext }}
+                    {{$noPermissionToEdit := .NoPermissionToEdit }}
+                    {{$Error := .Error }}
+                    {{range $iterateAdminObjects := .AdminFilterObjects.GetPaginated}}
+                        <tr>
+                            <td onclick="$('.main_check').prop('checked', false);">
+                                <input type="hidden" value="{{ $iterateAdminObjects.ID }}" name="object_id"/>
+                                <input  class="item_check" type="checkbox" value="{{ $iterateAdminObjects.ID }}">
+                            </td>
+                            {{$i  := 0 }}
+                            {{ $form := $listDisplay.BuildFormForListEditable $currentAdminContext $iterateAdminObjects.ID $iterateAdminObjects.Model $Error}}
+                            {{range $field := $listDisplay.GetAllFields}}
+                                <td>
+                                    {{if eq $i 0}}{{ if not $noPermissionToEdit }}<a class="bold clickable Row_id no-style" href="{{$currentURL}}edit/{{$iterateAdminObjects.ID}}/">{{ end }}{{ end }}
+                                    {{ if $field.Field }}
+                                        {{ $fieldExistsInTheForm := $form.ExistsField $field }}
+                                        {{ if $fieldExistsInTheForm }}
+                                            {{ $fieldEditable := $form.FieldRegistry.GetByName $field.Field.Name }}
+                                            {{ $fieldEditable.FieldConfig.Widget.Render $iterateAdminObjects.RenderContext $field.Field }}
+                                        {{ else }}
+                                            {{ $field.GetValue $iterateAdminObjects.Model}}
+                                        {{ end }}
+                                    {{ end }}
+                                    {{ if not $field.Field }}
+                                    {{ $field.GetValue $iterateAdminObjects.Model}}
+                                    {{ end }}
+                                    {{if eq $i 0}}{{ if not $noPermissionToEdit }}</a>{{ end }}{{ end }}
+                                </td>
+                                {{ $i = (add $i 1) }}
+                            {{end}}
+                        </tr>
+                    {{end}}
+                    </tbody>
+                </table>
+                {{ if .ListDisplay.IsThereAnyEditable }}
+                        <div style="margin: 10px; text-align: center;">
+                            <input value="{{Tf $Language.Code "Save" }}" type="submit" class="btn btn-primary" />
+                        </div>
+                    </form>
+                {{ end }}
+            </div>
+            {{if not .ListFilter.IsEmpty}}
+            <div class="col-sm-2" style="">
+                {{ $fullUrl := .FullURL }}
+                {{range $lf := .ListFilter.Iterate}}
+                <div class="form-group" class="categorical_filter_fields" style="background:#efefef;padding:10px;">
+                    <label class="camelcaseFix">{{Tf $Language.Code .Title }}</label>&nbsp;&nbsp;&nbsp;
+                    <i style="font-size:18px;" class="fa fa-info-circle pointer" data-toggle="tooltip" data-placement="bottom" title="{{Tf $Language.Code "Filter By" }} {{Tf $Language.Code .Title }}"></i><br/>
+                    {{if $lf.IsItActive $fullUrl }}
+                    <a href="{{ $lf.GetURLToClearFilter $fullUrl }}">{{Tf $Language.Code "All" }}</a><br/>
+                    {{end}}
+                    {{ range $i, $option := .OptionsToShow }}
+                    {{if $lf.IsThatOptionActive $option $fullUrl }}
+                    {{Tf $Language.Code $option.DisplayAs }}<br/>
+                    {{else}}
+                    <a href="{{ $lf.GetURLForOption $option $fullUrl }}">{{Tf $Language.Code $option.DisplayAs }}</a><br/>
+                    {{end}}
+                    {{ end }}
+                </div>
+                {{end}}
+            </div>
+            {{end}}
+        </div>
+    </div>
+    <div class="fixed-bottom bg-footer default-padding z-index9 admin_font bold">
+        <div class="col-sm-8 col-xs-10">
+            <center><ul id="pagination_container" class="pagination pagination-sm pagination-xs" style="margin:0px;"></ul></center>
+        </div>
+        <div class="col-sm-4 col-xs-2">
+            <div style="display:inline-block;float:right;">
+                <form id="export_form" method="POST" action="{{ .CurrentURL }}/export/?{{ .CurrentQuery }}">
+                    <input type="hidden" name="csrf-token" value="{{CSRF .SessionKey}}" />
+                    <input type="hidden" class="form-control camelcaseFixPlaceHolder"
+                           name="export" placeholder="Search..." value="true" />
+                    <button type="submit" class="btn btn-success search pull-right">
+                        <i class="fa fa-table"></i> {{Tf .Language.Code "Excel"}}
+                    </button>
+                </form>
+            </div>
+        </div>
+
+    </div>
+</div>
+<script type="text/javascript">
+    $('.main_check').click(function(ev) {
+        var status = $(ev.currentTarget).prop('checked');
+        $(ev.currentTarget).parent().parent().parent().parent().find('.item_check').prop('checked', status);
+    });
+    GET = (function(win, doc){
+        var loc = win.location,
+            arr = loc.search.length > 1 ? loc.search.substr(1).split("&") : [],
+            params = {},
+            len = arr.length,
+            i = 0;
+
+        for (; i < len; i ++) {
+            if (arr[i] !== "") {
+                var tmp = arr[i].split("=");
+                params[tmp[0]] = tmp[1] ? decodeURI(tmp[1]) : "";
+            }
+        }
+
+        return params;
+    })(window, document);
+    paginator('pagination_container', {{ .TotalPages }});
+    fixcamelcase_pagination('camelcasefixPagination');
+    $('#model-actions').change(function(ev) {
+        $('.action-description').text($('#model-actions').children("option:selected").data('description') || '');
+    });
+    $('#action-form').submit(function(ev) {
+        if (!$('#model-actions').children("option:selected").length) {
+            ev.preventDefault();
+            alert(Translate('Please choose any action'));
+            return;
+        }
+        if (!$('.item_check:checked').length) {
+            ev.preventDefault();
+            alert(Translate('Please choose at least one object'));
+            return;
+        }
+        var form = $('#action-form');
+        var selectedAction = $('#model-actions').children("option:selected");
+        var requiresExtraSteps = selectedAction.data('extrasteps');
+        var url = location.pathname + '/' + selectedAction.attr('name') + "/";
+        var objectIdsInput = $(ev.currentTarget).find('input[name="object_ids"]');
+        var objectIds = [];
+        $('.item_check:checked').each(function(_, item) {
+            objectIds.push($(item).val());
+        });
+        objectIdsInput.val(objectIds.join(','));
+        if (!requiresExtraSteps) {
+            ev.preventDefault();
+            show_loading();
+            $.ajax({
+                url: url,
+                method: "POST",
+                processData: false,
+                contentType:"application/json; charset=utf-8",
+                data: JSON.stringify({
+                    object_ids: objectIds.join(',')
+                }),
+                beforeSend: function(xhr){xhr.setRequestHeader('CSRF-TOKEN', form.find('input[name="csrf-token"]').val());},
+                success: function() {
+                    hide_loading(300);
+                    // @todo, show success message
+                },
+                error: function(xhr) {
+                    hide_loading(300);
+                    alert(Translate(JSON.parse(xhr.responseText)));
+                }
+            });
+            return;
+        }
+        if (location.search.length) {
+            url += '?' + location.search;
+        }
+        $(ev.currentTarget).attr('action', url);
+        return true;
+    });
+</script>
+{{Include "footer"}}

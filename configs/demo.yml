@@ -1,0 +1,25 @@
+test: "aaa"
+db:
+  default:
+    type: "sqlite"
+    name: "/persist/test.db"
+#    type: "postgres"
+#    name: "gomonolithofficialtest"
+#    password: "123456"
+#    user: "gomonolithofficialtest"
+auth:
+  jwt_secret_token: "jdnfksdmfksd"
+  max_username_length: 40
+  min_username_length: 8
+  min_password_length: 8
+admin:
+  listen_port: 8080
+api:
+  listen_port: 8081
+swagger:
+  path_to_spec: configs/api-spec.yml
+  listen_port: 8082
+  api_editor_listen_port: 8083
+gomonolith:
+  secure_cookie: true
+debug: true

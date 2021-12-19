@@ -1,0 +1,56 @@
+{{ if not .ShowOnlyHtmlInput }}
+{{ if ne .Type "hidden" }}
+{{ if .FieldDisplayName }}
+<td class="hidden-xs">
+    <label {{ if .HelpText }}data-toggle="tooltip" data-placement="bottom" data-original-title="{{ Translate .HelpText }}"{{ end }} class="col-sm-12 control-label form_label"><span class="camelcaseFix">{{ GetDisplayName (Translate .FieldDisplayName) }}</span>:
+        <span class="{{ if .HelpText }}text-muted{{ end }}" style="font-size:12px;">
+                        {{ if .HelpText }}
+                            <i class="fa fa-question-circle"></i>:
+                        {{ end }}
+                        {{ if .Required }}
+                            <span style="color:#f00;font-weight:bold;">&nbsp;*</span>
+                        {{ end }}
+                    </span>
+    </label>
+</td>
+{{ end }}
+{{ end }}
+{{ end }}
+<td style="width:80%;" class="drop-file" id="drop-file-{{ .Name }}">
+    <div class="col-sm-12">
+        <table class="" style="width: 100%;">
+        <tbody><tr>
+            <td style="padding-right:10px;">
+                <div class="input-group search">
+
+                    <label class="input-group-btn">
+                                    <span class="btn btn-primary">
+                                      {{ Translate "Browse"}}… <input name="{{ .Name }}" type="file" style="display: none;" {{ range $k, $v := .Attrs }} {{ attr $k }}="{{ safe $v }}"{{ end }} >
+                                    </span>
+                    </label>
+                    <input type="text" class="form-control" readonly="" id="{{ .Name }}-filename" {{ range $k, $v := .Attrs }} {{ attr $k }}="{{ safe $v }}"{{ end }} >
+                </div>
+                {{ if .UploadedFile }}
+                    <div class="uploaded-file">
+                        {{ if .IsItImage }}
+                            {{ if .UploadedFile }}
+                                <img src="{{ .UploadedFile}}" height="50" />
+                            {{ end }}
+                        {{ else }}
+                            {{ if .UploadedFile }}
+                                <a href="{{ .UploadedFile }}" download>{{ Translate "Download file"}} {{ .Value }}</a>
+                            {{ end }}
+                        {{ end }}
+                    </div>
+                {{ end }}
+            </td>
+            <td style="width: 50%;">
+
+
+                <img class="search pull-left image_trigger pointer" style="max-width: 100px; height:auto;padding-right:0px;" src="">
+
+            </td>
+        </tr>
+        </tbody></table>
+    </div>
+</td>

@@ -1,0 +1,1 @@
+<option value="{{ .Value }}" {{ if .Selected }}selected="selected"{{ end }} {{ range $k, $v := .Attrs }} {{ attr $k }}="{{ safe $v }}"{{ end }} >{{ Translate .OptLabel }}</option>

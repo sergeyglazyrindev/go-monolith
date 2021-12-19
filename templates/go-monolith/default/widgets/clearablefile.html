@@ -1,0 +1,6 @@
+{{ if .IsInitial }}<p class="file-upload">{{Translate .InitialText}}: {{ if .CurrentValue }}<a href="{{ .CurrentValue.URL }}">{{ .CurrentValue.URL }}</a>{{ end }}{{ if not .Required }}
+<span class="clearable-file-input">
+    <input type="checkbox" name="{{ .Name }}_clear" id="{{ .Id }}"{{ if .Attrs.disabled }} disabled{{ end }}>
+    <label for="{{ .Id }}">{{Translate .ClearCheckboxLabel}}</label></span>{{ end }}<br>
+    {{Translate .InputText}}:{{ end }}
+    <input type="{{ .Type }}" name="{{ .Name }}" {{ range $k, $v := .Attrs }} {{ attr $k }}="{{ safe $v }}"{{ end }}>{{ if .IsInitial }}</p>{{end}}

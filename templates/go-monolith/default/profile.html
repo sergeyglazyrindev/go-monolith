@@ -1,0 +1,150 @@
+{{Include "header"}}
+{{Include "header-bar"}}
+<style type="text/css" media="all">
+  /* fix rtl for demo */
+  .chosen-rtl .chosen-drop { left: -9000px; }
+  .change-password-error span {
+      padding-left: 5px;
+  }
+</style>
+    <div class="container-fluid main-content admin-page">
+      <div class="col-sm-12">
+        {{ .F.Render }}
+      </div>
+    </div>
+
+    <!-- Modal -->
+    <div id="myModal" class="modal fade z-index99999" role="dialog" style="width:100%;">
+      <div class="modal-dialog" style="width:50%;">
+        <!-- Modal content-->
+        <div class="modal-content">
+          <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal">&times;</button>
+            <h4 class="modal-title"><i class="fa fa-unlock-alt fa-fw"></i></h4>
+          </div>
+          <form method="POST" action="" id="changePassword">
+              <input type="hidden" name="csrf_token" value="{{CSRF .SessionKey}}" />
+            <div class="modal-body">
+                <div class="change-password-error alert alert-error hidden">
+                    <strong><i class="fa fa-exclamation"></i></strong><span></span>
+                </div>
+              <div class="form-group search">
+                <div class="input-group">
+                  <span style="min-width:140px;" class="input-group-addon camelcaseFix">{{Tf .Language.Code "Old Password"}}</span>
+                  <input class="form-control" name="oldPassword" type="password" value="" >
+                </div>
+              </div>
+              <div class="form-group search">
+                <div class="input-group">
+                  <span style="min-width:140px;" class="input-group-addon camelcaseFix">{{Tf .Language.Code "New Password"}}</span>
+                  <input class="form-control" name="newPassword" type="password" value="" >
+                </div>
+              </div>
+              <div class="form-group search">
+                <div class="input-group">
+                  <span style="min-width:140px;" class="input-group-addon camelcaseFix">{{Tf .Language.Code "Confirm Password"}}</span>
+                  <input class="form-control" name="confirmPassword" type="password" value="" >
+                </div>
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button type="submit" class="btn btn-primary" name="save" value="password">{{Tf .Language.Code "Apply Changes"}}</button>
+              <button type="button" class="btn btn-default close_modal_btn" data-dismiss="modal">{{Tf .Language.Code "Close"}}</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <script type="text/javascript">
+    if (hash_ = window.location.hash){
+      // console.log(hash_);
+      if (hash_ == '#changepass'){
+        $('#myModal').modal('show');
+      }
+    };
+    $('.close_modal_btn').click(function(){
+      window.location.hash = "";
+    });
+    $('#disable2FactorAuth').click(function(ev) {
+        ev.preventDefault();
+        $.ajax({
+            url: "/user/api/disable-2fa/",
+            method: "POST",
+            processData: false,
+            contentType:"application/json; charset=utf-8",
+            data: "",
+            beforeSend: function(xhr){xhr.setRequestHeader('CSRF-TOKEN', $('input[name="csrf_token"]').val());},
+            success: function() {
+                location.reload();
+            },
+            error: function(xhr) {
+            }
+        });
+    });
+    $('#changePassword').submit(function(ev) {
+        ev.preventDefault();
+        var form = $(ev.currentTarget);
+        $.ajax({
+            url: "/user/api/change-password/",
+            method: "POST",
+            processData: false,
+            contentType:"application/json; charset=utf-8",
+            data: JSON.stringify({
+                old_password: form.find('input[name="oldPassword"]').val(),
+                password: form.find('input[name="newPassword"]').val(),
+                confirm_password: form.find('input[name="confirmPassword"]').val(),
+            }),
+            beforeSend: function(xhr){xhr.setRequestHeader('CSRF-TOKEN', form.find('input[name="csrf_token"]').val());},
+            success: function() {
+                $('.change-password-error').toggleClass('hidden', true);
+                $('#myModal').modal('toggle');
+            },
+            error: function(xhr) {
+                $('.change-password-error').toggleClass('hidden', false);
+                $('.change-password-error span').html(Translate(JSON.parse(xhr.responseText)));
+            }
+        });
+        console.log('change password');
+    });
+    $('#enable2FactorAuth').click(function(ev) {
+        ev.preventDefault();
+        $.ajax({
+            url: "/user/api/enable-2fa/",
+            method: "POST",
+            processData: false,
+            contentType:"application/json; charset=utf-8",
+            data: "",
+            beforeSend: function(xhr){xhr.setRequestHeader('CSRF-TOKEN', $('input[name="csrf_token"]').val());},
+            success: function() {
+                location.reload();
+            },
+            error: function(xhr) {
+            }
+        });
+    });
+    setHeaderTabs(arrayVariableHeader, '#headtab-container', 'col-sm-4');
+
+    fixcamelcase('camelcaseFix','');
+
+      $(function () {
+          $('.date').datetimepicker({
+            format: "YYYY-MM-DD HH:mm"
+          });
+      });
+    </script>
+    <script type="text/javascript">
+      var config = {
+        '.chosen-select'           : {},
+        '.chosen-select-deselect'  : {allow_single_deselect:true},
+        '.chosen-select-no-single' : {disable_search_threshold:10},
+        '.chosen-select-no-results': {no_results_text:'No Data to Display!'},
+        '.chosen-select-width'     : {width:"95%"}
+      }
+      for (var selector in config) {
+        // $(selector).chosen(config[selector]);
+      }
+
+      {{if .Demo}}notifyDemo();{{end}}
+    </script>
+{{Include "footer"}}

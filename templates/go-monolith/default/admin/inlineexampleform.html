@@ -1,0 +1,30 @@
+<!-- // @todo handle stackedinline -->
+{{ if eq .Inline.InlineType "tabular" }}
+    <table class="table-condensed table">
+        <tbody>
+            {{ $form := .Inline.GetFormForExample .AdminContextInitial}}
+            <tr class="example-form-to-insert" data-inlineid="{{ .Inline.GetInlineID}}">
+                <td onclick="$(this).parent().parent().parent().find('.main_check').prop('checked', false);">
+                    <input type="hidden" name="{{ .Inline.GetInlineID}}-object_id-toreplacewithid" />
+                    <a class="remove-inline" href="javascript:void(0)"><i class="fa fa-times-circle" aria-hidden="TRUE" style="color:red;"></i></a>
+                </td>
+                {{range $field := .Inline.ListDisplay.GetAllFields}}
+                    <td>
+                        {{ if $field.Field }}
+                        {{ $fieldExistsInTheForm := $form.ExistsField $field }}
+                        {{ if $fieldExistsInTheForm }}
+                        {{ $fieldEditable := $form.FieldRegistry.GetByName $field.Field.Name }}
+                        {{ $fieldEditable.FieldConfig.Widget.Render $form.FormRenderContext $field.Field }}
+                        {{ else }}
+                        {{ $field.GetValue $form.FormRenderContext.Model}}
+                        {{ end }}
+                        {{ end }}
+                        {{ if not $field.Field }}
+                        {{ $field.GetValue $form.FormRenderContext.Model }}
+                        {{ end }}
+                    </td>
+                {{ end }}
+            </tr>
+        </tbody>
+    </table>
+{{ end }}

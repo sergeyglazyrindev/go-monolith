@@ -1,0 +1,1 @@
+{{ if .WrapLabel }}<label{{ if .ForID }} for="{{ .ForID }}"{{ end }}>{{ end }}{{ Include "admin/widgets/input" }}{{ if .WrapLabel }} {{ Translate .Label }}</label>{{ end }}

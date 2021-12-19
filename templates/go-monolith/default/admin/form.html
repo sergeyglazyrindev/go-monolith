@@ -1,0 +1,24 @@
+{{ Include "include_extra_static" }}
+<form method="POST" action="" enctype="multipart/form-data" class="form-horizontal" style="padding: 20px; margin: 0 auto;">
+    {{ if .FormError }}
+    {{ range $generalError := .FormError.GeneralErrors }}
+    <div class="error-cont">
+        <span>{{ Translate $generalError }}</span>
+    </div>
+    {{ end }}
+    {{ end }}
+    <input type="hidden" name="csrf-token" value="{{CSRF .RequestContext.SessionKey}}" />
+    <table class="table table-hover table-bordered float-header table-condensed">
+        {{ RenderFieldGroups }}
+    </table>
+    <div class="fixed-bottom bg-black3 default-padding z-index9">
+        <div class="">
+            <div class="pull-right">
+
+                <button type="submit" class="return_url_hide no-borderradius btn btn-primary" style="display:inline-block;" name="save" value="">
+                    {{ Translate "Save"}}
+                </button>
+            </div>
+        </div>
+    </div>
+</form>

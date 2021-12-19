@@ -1,0 +1,11 @@
+{{ if not .ShowOnlyHtmlInput }}<div class="form-group search">
+    <div class='input-group date datetimepicker' id='datetimepicker_{{.Name}}'>
+                  <span style="min-width:140px;" class="input-group-addon">
+                    <label class="camelcaseFix">{{ GetDisplayName (Translate .FieldDisplayName)}}</label>
+                  </span>
+{{ end }}
+        <input class="form-control" name="{{.Name}}" type="text" value="{{.Value}}" {{ range $k, $v := .Attrs }} {{ attr $k }}="{{ safe $v }}"{{ end }} {{if .ReadOnly}} readonly {{end}}>
+{{ if not .ShowOnlyHtmlInput }}
+    </div>
+</div>
+{{ end }}

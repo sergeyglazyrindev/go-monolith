@@ -1,0 +1,6 @@
+{{ range $extraCss := .ExtraStatic.ExtraCSS }}
+    <link rel="stylesheet" href="{{ $extraCss | safe }}">
+{{ end }}
+{{ range $extraJs := .ExtraStatic.ExtraJS }}
+<script src="{{ $extraJs | safe }}"></script>
+{{ end }}

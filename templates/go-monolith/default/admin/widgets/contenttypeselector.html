@@ -1,0 +1,6 @@
+{{Include "admin/widgets/select" }}
+<script type="text/javascript">
+    if (window.ProjectFields === undefined) {
+        ProjectFields = JSON.parse('{{ .AllFields | safe }}');
+    }
+</script>

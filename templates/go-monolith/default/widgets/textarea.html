@@ -1,0 +1,1 @@
+<textarea name="{{ .Name }}" {{ range $k, $v := .Attrs }} {{ attr $k }}="{{ safe $v }}"{{ end }}>{{ .Value }}</textarea>

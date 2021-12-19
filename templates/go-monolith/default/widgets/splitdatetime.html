@@ -1,0 +1,6 @@
+<p class="datetime">
+    {{ $dateSubwidget := (index .Subwidgets 0) }}
+    {{ .DateLabel }} {{ Include "widgets/date" $dateSubwidget }}
+    {{ $timeSubwidget := (index .Subwidgets 1) }}
+    {{ .TimeLabel }} {{ Include "widgets/time" $timeSubwidget }}
+</p>

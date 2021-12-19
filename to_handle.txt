@@ -1,0 +1,10 @@
+//			admin := User{
+//				FirstName:    "System",
+//				LastName:     "Recovery Admin",
+//				Username:     recoverUsername,
+//				Password:     hashPass(recoveryPass),
+//				Admin:        true,
+//				RemoteAccess: false,
+//				Active:       true,
+//			}
+//			admin.Save()

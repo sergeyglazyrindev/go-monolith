@@ -1,0 +1,15 @@
+language: go
+
+go:
+  - "1.13"
+  - "1.14"
+  - "1.15"
+  - 1.16.x
+
+go_import_path: github.com/sergeyglazyrindev/go-monolith
+
+script:
+  - go test -coverprofile=coverage.txt -covermode=atomic
+
+after_success:
+  - bash <(curl -s https://codecov.io/bash)

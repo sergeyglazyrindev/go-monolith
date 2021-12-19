@@ -1,0 +1,36 @@
+*.swp
+coverage.out 
+.DS_Store
+.vscode
+test.db
+.idea
+.env
+/main
+gen
+gomonolith.db
+# Binaries for programs and plugins
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Test binary, built with `go test -c`
+*.test
+
+# Output of the go coverage tool, specifically when used with LiteIDE
+*.out
+
+# Dependency directories (remove the comment below to include it)
+# vendor/
+*.cover
+tests/blueprint/auth/media/*
+uploads/*
+lint.json
+contrib/docker
+/estest
+/examples/go-monolith-example/main
+/examples/es-go-monolith-example/main
+/configs/real_demo.yml
+/examples/proofit-example/main
+go-monolith.db

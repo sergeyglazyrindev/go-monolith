@@ -1,0 +1,16 @@
+<div class="{{ .SelectorClass }}">
+    <h2>{{ Translate .SelectTitle }}<span class="help help-tooltip help-icon" title="{{ Translate .SelectHelp }}"></span></h2>
+    {{ if .SearchSelectHelp }}<p class="selector-filter"><label for="{{.Name}}"><span class="help-tooltip search-label-icon" title="{{ Translate .SearchSelectHelp }}"></span></label> <input type="text" placeholder="{{ Translate "Filter"}}" id="{{.Name}}" class="filter-selector"></p>{{ end }}
+    <select {{ if .Multiple }}multiple{{ end }} name="{{.Name }}" data-placeholder="{{ Translate "Select"}}" class="{{ .SelectClass }} form-control" tabindex="2" {{ range $k, $v := .Attrs }} {{ attr $k }}="{{ safe $v }}"{{ end }}>
+    {{ range $groupName, $groupChoices := .OptGroups }}
+    {{ if $groupName }}<optgroup label="{{ Translate $groupName }}">{{end}}
+    {{ range $i, $option := $groupChoices }}
+    {{Include $option.OptionTemplateName $option }}
+    {{end}}
+    {{ if $groupName }}
+</optgroup>
+    {{end}}
+    {{end}}
+    </select>
+    <a title="{{ Translate .HelpChooseAll }}" href="#" class="{{ .ChooseAllClass }} {{ if .ChooseAllIsActive }}active{{ end }}">{{ Translate .ChooseAllText }}</a>
+</div>

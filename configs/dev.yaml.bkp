@@ -1,0 +1,19 @@
+test: "aaa"
+db:
+  default:
+    host: "127.0.0.1"
+    port: 5432
+    user: "freelife"
+    password: "123456"
+    name: "freelife"
+    type: "postgresql"
+auth:
+  jwt_secret_token: "jdnfksdmfksd"
+admin:
+  listen_port: 8080
+api:
+  listen_port: 8081
+swagger:
+  path_to_spec: configs/api-spec.yml
+  listen_port: 8082
+  api_editor_listen_port: 8083

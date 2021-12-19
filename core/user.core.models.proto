@@ -1,0 +1,29 @@
+syntax = "proto3";
+
+package models;
+
+// import "github.com/sergeyglazyrindev/go-monolith/model";
+// import "time";
+
+option go_package = "github.com/sergeyglazyrindev/go-monolith/blueprint/user/models";
+// option (gogoproto.protosizer_all) = true;
+// option (gogoproto.sizer_all) = false;
+
+message User {
+string Username = 1;
+string FirstName = 2;
+string LastName = 3;
+string Password = 4;
+string Email = 5;
+bool Active = 6;
+bool Admin = 7;
+string UserGroup = 9;
+string Photo = 11;
+string LastLogin = 12;
+string ExpiresOn = 13;
+string GeneratedOTPToVerify = 14;
+string OTPSeed = 15;
+string Salt = 16;
+bool OTPRequired = 17;
+}
+

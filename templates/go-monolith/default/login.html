@@ -1,0 +1,217 @@
+{{Include "header"}}
+<style type="text/css" media="all">
+    /* fix rtl for demo */
+    .chosen-rtl .chosen-drop { left: -9000px; }
+</style>
+<script>
+    var err = 0;
+</script>
+
+<div class="top-space col-xl-12">
+
+</div>
+<div id="page_loader_container" >
+    <div id="page_loader_containerBG" >
+        <div id="page_loaderTitle">
+            <h2><center style="color:#555;" class="admin_font bold">{{Tf .Language.Code "loading please wait..."}}</center></h2>
+        </div>
+        <div id="page_loader">
+
+        </div>
+    </div>
+</div>
+
+<div class="fixed-top bg-black3 default-padding z-index9">
+    <div class="">
+        <div class="pull-left" style="display: block-inline;">
+            <a href="{{.RootAdminURL}}/"><img class="hvr-grow" style="max-height:40px" src="{{.Logo}}"></a>
+        </div>
+    </div>
+</div>
+
+<div class="container-fluid tohide" id="Login">
+    <div class="col-sm-6 col-sm-offset-3">
+        <center>
+          <span id="logo-top" class="fa-stack fa-lg fa-3x">
+            <i class="fa fa-square-o fa-stack-2x"></i>
+            <i class="fa fa-lock fa-stack-1x"></i>
+          </span>
+        </center>
+        <form method="POST" id="signin-form">
+            <input type="hidden" name="csrf_token" value="{{CSRF .SessionKey}}" />
+            <div class="form-group">
+                <label for="username">{{Tf .Language.Code "Username"}}</label>
+                <div class="input-group">
+                    <span class="input-group-addon"><i class="fa fa-user fa-fw"></i></span>
+                    <input id="username" type="text" class="form-control" name="username" placeholder="{{Tf .Language.Code "Username"}}" value="{{.Username}}">
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="password">{{Tf .Language.Code "Password"}}</label>
+                <div class="input-group">
+                    <span class="input-group-addon"><i class="fa fa-lock fa-fw"></i></span>
+                    <input id="password" type="password" class="form-control" name="password" placeholder="{{Tf .Language.Code "Password"}}" value="{{.Password}}">
+                </div>
+            </div>
+            {{if .OTPRequired}}
+            <div class="form-group">
+                <label for="password">{{Tf .Language.Code "Verification Code"}}</label>
+                <div class="input-group">
+                    <span class="input-group-addon"><i class="fa fa-lock fa-fw"></i></span>
+                    <input id="otp" type="text" class="form-control" name="otp" placeholder="{{Tf .Language.Code "Enter Verification Code"}}">
+                </div>
+            </div>
+            {{end}}
+            {{ $NoOfLangs := len .Languages }}
+            {{ if ne $NoOfLangs 0 }}
+            <div class="form-group">
+                <label for="password">{{Tf .Language.Code "Language"}}</label>
+                <div class="input-group">
+                    <span class="input-group-addon"><i class="fa fa-globe fa-fw"></i></span>
+                    <select id="language" class="form-control" name="language">
+                        {{range .Languages}}
+                        <option value="{{.Code}}"{{if .Default}} selected{{end}}>{{.Name}} ({{.EnglishName}})</option>
+                        {{end}}
+                    </select>
+                </div>
+            </div>
+            {{end}}
+            <div class="form-group" style="display: flex; align-items: center;">
+                <button type="submit" class="btn btn-primary">{{Tf .Language.Code "Login"}}</button>
+                <a class="pointer" id="forgotpassword_trigger"  style="margin-left:25px; vertical-align:bottom;">{{Tf .Language.Code "Forgot Password"}}</a>
+            </div>
+        </form>
+        <hr>
+        <div class="hidden error-cont alert alert-warning">
+            <strong><i class="fa fa-info-circle fa-2x"></i></strong>&nbsp;&nbsp;<span></span>
+        </div>
+        <script>
+            err = "1";
+        </script>
+        <div id="info_content">
+        </div>
+    </div>
+</div>
+
+<div class="container-fluid tohide" id="ForgotPassword">
+    <div class="col-sm-6 col-sm-offset-3">
+        <center>
+            <h1 class="admin_font bold">
+                {{Tf .Language.Code "forgot password"}}
+            </h1>
+            <form method="POST" id="forgot-password-form">
+                <input type="hidden" name="csrf_token" value="{{CSRF .SessionKey}}" />
+                <div class="form-group">
+                    <label for="username" class="pull-left">{{Tf .Language.Code "Email Address"}}</label>
+                    <br /><br />
+                    <div class="input-group pull-left">
+                        <span class="input-group-addon"><i class="fa fa-envelope fa-fw"></i></span>
+                        <input id="email" type="email" class="form-control" name="email" placeholder="{{Tf .Language.Code "email address associated with user account"}}">
+                    </div>
+                </div>
+                <br /><br />
+                <input id="save_trigger" name="save" value="{{Tf .Language.Code "Send Request"}}" type="button" class="btn btn-primary pull-left" />
+                <hr />
+                <div class="hidden error-cont-for-forgot-password alert alert-warning">
+                    <strong><i class="fa fa-info-circle fa-2x"></i></strong>&nbsp;&nbsp;<span></span>
+                </div>
+            </form>
+        </center>
+    </div>
+</div>
+
+<!-- Conflict in jquery -->
+<!-- <script src="https://code.jquery.com/jquery-3.1.1.slim.min.js" integrity="sha384-A7FZj7v+d/sdmMqp/nOQwliLvUsJfDHW+k9Omg/a/EheAdgtzNs3hpfag6Ed950n" crossorigin="anonymous"></script> -->
+<!-- Conflict in jquery -->
+<!-- <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script> -->
+<script type="text/javascript">
+    $('#ForgotPassword').hide();
+    if (window.location.hash == "#changepass"){
+        var content = "";
+        content += '  <div class="alert alert-info">';
+        content += '    <strong>{{Tf .Language.Code "Info"}}:</strong>&nbsp;{{Tf .Language.Code "Applied Changes"}}!&nbsp;&nbsp;&nbsp;{{Tf .Language.Code "Login Again with updated credentials"}}</span>';
+        content += '  </div>';
+        $('#info_content').html(content);
+        window.location.hash="";
+    }
+    $(function () {
+        $('.date').datetimepicker({
+            format: "YYYY-MM-DD HH:mm"
+        });
+    });
+</script>
+<script type="text/javascript">
+    $('#forgotpassword_trigger').click(function(){
+        $('.tohide').hide();
+        $('#ForgotPassword').fadeIn();
+    });
+    $('#loginpage_trigger').click(function(){
+        $('.tohide').hide();
+        $('#Login').fadeIn();
+    });
+    loading();
+    hide_loading(300);
+    function createCookie(name, value, days) {
+        var expires;
+
+        if (days) {
+            var date = new Date();
+            date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
+            expires = "; expires=" + date.toGMTString();
+        } else {
+            expires = "";
+        }
+        document.cookie = encodeURIComponent(name) + "=" + encodeURIComponent(value) + expires + "; path=/";
+    }
+    $('#signin-form').submit(function(ev) {
+        ev.preventDefault();
+        var form = $(ev.currentTarget);
+        show_loading();
+        createCookie("language", $('#language').val(), 365);
+        $.ajax({
+            url: "/auth/direct-for-admin/signin/?for-gomonolith-panel=1",
+            method: "POST",
+            processData: false,
+            contentType:"application/json; charset=utf-8",
+            data: JSON.stringify({
+                signinfield: form.find('input[name="username"]').val(),
+                password: form.find('input[name="password"]').val()
+            }),
+            beforeSend: function(xhr){xhr.setRequestHeader('CSRF-TOKEN', form.find('input[name="csrf_token"]').val());},
+            success: function() {
+                $('.error-cont').toggleClass('hidden', true);
+                hide_loading(300);
+                location.href = '/admin';
+            },
+            error: function(xhr) {
+                $('.error-cont').toggleClass('hidden', false);
+                $('.error-cont span').html(Translate(JSON.parse(xhr.responseText)));
+                hide_loading(300);
+            }
+        });
+    });
+    $('#save_trigger').click(function(){
+        show_loading();
+        var form = $("#forgot-password-form");
+        $.ajax({
+            url: "/user/api/forgot/?for-gomonolith-panel=1",
+            method: "POST",
+            processData: false,
+            contentType:"application/json; charset=utf-8",
+            data: JSON.stringify({
+                email: form.find('input[name="email"]').val()
+            }),
+            beforeSend: function(xhr){xhr.setRequestHeader('CSRF-TOKEN', form.find('input[name="csrf_token"]').val());},
+            success: function() {
+                $('.error-cont-for-forgot-password').toggleClass('hidden', true);
+                hide_loading(300);
+            },
+            error: function(xhr) {
+                $('.error-cont-for-forgot-password').toggleClass('hidden', false);
+                $('.error-cont-for-forgot-password span').html(Translate(JSON.parse(xhr.responseText)));
+                hide_loading(300);
+            }
+        });
+    });
+</script>
+{{Include "footer"}}

@@ -1,0 +1,286 @@
+package api
+
+import (
+	"encoding/base64"
+	"fmt"
+	"github.com/nfnt/resize"
+	authservices "github.com/sergeyglazyrindev/uadmin/blueprint/auth/services"
+	"github.com/sergeyglazyrindev/uadmin/interfaces"
+	model2 "github.com/sergeyglazyrindev/uadmin/modelold"
+	"github.com/sergeyglazyrindev/uadmin/preloaded"
+	"image"
+	"image/gif"
+	"image/jpeg"
+	"image/png"
+	"io"
+	"net/http"
+	"os"
+	"strings"
+)
+
+// GetImageSizer can be inplemented for any model to customize the image size uploaded
+// to that model
+type GetImageSizer interface {
+	GetImageSize() (int, int)
+}
+
+func ProcessUpload(r *http.Request, f *model2.F, modelName string, session *interfaces.Session, s *model2.ModelSchema) (val string) {
+	base64Format := false
+	// Get file description from http request
+	httpFile, handler, err := r.FormFile(f.Name)
+	if r.Context().Value(preloaded.CKey("dAPI")) != nil {
+		httpFile, handler, err = r.FormFile(f.ColumnName)
+	}
+	if err != nil {
+		if r.Form.Get(f.Name+"-raw") != "" {
+			base64Format = true
+		} else {
+			return ""
+		}
+	} else {
+		defer httpFile.Close()
+	}
+
+	// return "", s if there is no file uploaded
+	if !base64Format {
+		if handler.Filename == "" {
+			return ""
+		}
+	}
+
+	if base64Format {
+		filesize := float64(len(r.Form.Get(f.Name+"-raw"))-strings.Index(r.Form.Get(f.Name+"-raw"), "://")) * 0.75
+		if int64(filesize) > preloaded.MaxUploadFileSize {
+			f.ErrMsg = fmt.Sprintf("File is too large. Maximum upload file size is: %d Mb", preloaded.MaxUploadFileSize/1024/1024)
+			return ""
+		}
+	} else {
+		if handler.Size > preloaded.MaxUploadFileSize {
+			f.ErrMsg = fmt.Sprintf("File is too large. Maximum upload file size is: %d Mb", preloaded.MaxUploadFileSize/1024/1024)
+			return ""
+		}
+	}
+
+	// Get the upload to path and create it if it doesn't exist
+	uploadTo := "/media/" + f.Type + "s/"
+	if f.UploadTo != "" {
+		uploadTo = f.UploadTo
+	}
+	if _, err = os.Stat("." + uploadTo); os.IsNotExist(err) {
+		err = os.MkdirAll("."+uploadTo, os.ModePerm)
+		if err != nil {
+			interfaces.Trail(interfaces.ERROR, "processForm.MkdirAll. %s", err)
+			return ""
+		}
+	}
+
+	// Generate local file name and create it
+	var fName string
+	var pathName string
+	var fParts []string
+	if base64Format {
+		fName = r.Form.Get(f.Name + "-raw")[0:strings.Index(r.Form.Get(f.Name+"-raw"), "://")]
+		fParts = strings.Split(fName, ".")
+	} else {
+		fName = handler.Filename
+		fName = strings.Replace(fName, "/", "_", -1)
+		fName = strings.Replace(fName, "\\", "_", -1)
+		fName = strings.Replace(fName, "..", "_", -1)
+		fParts = strings.Split(fName, ".")
+	}
+	fExt := strings.ToLower(fParts[len(fParts)-1])
+
+	pathName = "." + uploadTo + modelName + "_" + f.Name + "_" + authservices.GenerateBase64(10) + "/"
+	if f.Type == preloaded.CIMAGE && len(fParts) > 1 {
+		fName = strings.TrimSuffix(fName, "."+fExt) + "_raw." + fExt
+	} else if f.Type == preloaded.CIMAGE {
+		f.ErrMsg = "Image file with no extension. Please use png, jpg, jpeg or gif."
+		return ""
+	}
+
+	for _, err = os.Stat(pathName + fName); os.IsExist(err); {
+		pathName = "." + uploadTo + modelName + "_" + f.Name + "_" + authservices.GenerateBase64(10) + "/"
+	}
+	fName = pathName + fName
+	err = os.MkdirAll(pathName, os.ModePerm)
+	if err != nil {
+		interfaces.Trail(interfaces.ERROR, "processForm.MkdirAll. unable to create folder for uploaded file. %s", err)
+		return ""
+	}
+	fRaw, err := os.OpenFile(fName, os.O_WRONLY|os.O_CREATE, preloaded.DefaultMediaPermission)
+	if err != nil {
+		interfaces.Trail(interfaces.ERROR, "processForm.OpenFile. unable to create file. %s", err)
+		return ""
+	}
+
+	// Copy http file to local
+	if base64Format {
+		data, err := base64.StdEncoding.DecodeString(r.Form.Get(f.Name + "-raw")[strings.Index(r.Form.Get(f.Name+"-raw"), "://")+3 : len(r.Form.Get(f.Name+"-raw"))])
+		if err != nil {
+			interfaces.Trail(interfaces.ERROR, "ProcessForm error decoding base64. %s", err)
+			return ""
+		}
+		_, err = fRaw.Write(data)
+		if err != nil {
+			interfaces.Trail(interfaces.ERROR, "ProcessForm error writing file. %s", err)
+			return ""
+		}
+	} else {
+		_, err = io.Copy(fRaw, httpFile)
+		if err != nil {
+			interfaces.Trail(interfaces.ERROR, "ProcessForm error uploading http file. %s", err)
+			return ""
+		}
+	}
+	fRaw.Close()
+
+	interfaces.Trail(interfaces.DEBUG, "t:"+f.Type)
+	// store the file path to DB
+	if f.Type == preloaded.CFILE {
+		val = fmt.Sprint(strings.TrimPrefix(fName, "."))
+
+	} else {
+		// If case it is an image, process it first
+		fRaw, err = os.Open(fName)
+		if err != nil {
+			interfaces.Trail(interfaces.ERROR, "ProcessForm.Open %s", err)
+			return ""
+		}
+
+		// decode jpeg,png,gif into image.Image
+		var img image.Image
+		if fExt == preloaded.CJPG || fExt == preloaded.CJPEG {
+			img, err = jpeg.Decode(fRaw)
+		} else if fExt == preloaded.CPNG {
+			img, err = png.Decode(fRaw)
+		} else if fExt == preloaded.CGIF {
+			img, err = gif.Decode(fRaw)
+		} else {
+			f.ErrMsg = "Unknown image file extension. Please use, png, jpg/jpeg or gif"
+			return ""
+		}
+		if err != nil {
+			f.ErrMsg = "Unknown image format or image corrupted."
+			interfaces.Trail(interfaces.WARNING, "ProcessForm.Decode %s", err)
+			return ""
+		}
+
+		// Resize the image to fit max height, max width
+		width := img.Bounds().Dx()
+		height := img.Bounds().Dy()
+		model, _ := model2.NewModel(modelName, false)
+		// Check if there is a custom image size
+		if sizer, ok := model.Interface().(GetImageSizer); ok || height > preloaded.MaxImageHeight {
+			if ok {
+				height, width = sizer.GetImageSize()
+			} else {
+				Ratio := float64(preloaded.MaxImageHeight) / float64(height)
+				width = int(float64(width) * Ratio)
+				height = int(float64(height) * Ratio)
+				if width > preloaded.MaxImageWidth {
+					Ratio = float64(preloaded.MaxImageWidth) / float64(width)
+					width = int(float64(width) * Ratio)
+					height = int(float64(height) * Ratio)
+				}
+			}
+			img = resize.Resize(uint(width), uint(height), img, resize.Lanczos3)
+		}
+
+		// Store the active file
+		fActiveName := strings.Replace(fName, "_raw", "", -1)
+		fActive, err := os.Create(fActiveName)
+		if err != nil {
+			interfaces.Trail(interfaces.ERROR, "ProcessForm.Create unable to create file for resized image. %s", err)
+			return ""
+		}
+		defer fActive.Close()
+
+		fRaw, err = os.OpenFile(fName, os.O_WRONLY, 0644)
+		if err != nil {
+			interfaces.Trail(interfaces.ERROR, "ProcessForm.Open %s", err)
+			return ""
+		}
+		defer fRaw.Close()
+
+		// write new image to file
+		if fExt == preloaded.CJPG || fExt == preloaded.CJPEG {
+			err = jpeg.Encode(fActive, img, nil)
+			if err != nil {
+				interfaces.Trail(interfaces.ERROR, "ProcessForm.Encode active jpg. %s", err)
+				return ""
+			}
+
+			err = jpeg.Encode(fRaw, img, nil)
+			if err != nil {
+				interfaces.Trail(interfaces.ERROR, "ProcessForm.Encode raw jpg. %s", err)
+				return ""
+			}
+		}
+
+		if fExt == preloaded.CPNG {
+			err = png.Encode(fActive, img)
+			if err != nil {
+				interfaces.Trail(interfaces.ERROR, "ProcessForm.Encode active png. %s", err)
+				return ""
+			}
+
+			err = png.Encode(fRaw, img)
+			if err != nil {
+				interfaces.Trail(interfaces.ERROR, "ProcessForm.Encode raw png. %s", err)
+				return ""
+			}
+		}
+
+		if fExt == preloaded.CGIF {
+			o := gif.Options{}
+			err = gif.Encode(fActive, img, &o)
+			if err != nil {
+				interfaces.Trail(interfaces.ERROR, "ProcessForm.Encode active gif. %s", err)
+				return ""
+			}
+
+			err = gif.Encode(fRaw, img, &o)
+			if err != nil {
+				interfaces.Trail(interfaces.ERROR, "ProcessForm.Encode raw gif. %s", err)
+				return ""
+			}
+		}
+		val = fmt.Sprint(strings.TrimPrefix(fActiveName, "."))
+	}
+
+	// Delete old file if it exists and there not required
+	if !preloaded.RetainMediaVersions {
+		oldFileName := "." + fmt.Sprint(f.Value)
+		oldFileParts := strings.Split(oldFileName, "/")
+		os.RemoveAll(strings.Join(oldFileParts[0:len(oldFileParts)-1], "/"))
+	}
+
+	return val
+}
+
+func mediaHandler(w http.ResponseWriter, r *http.Request) {
+	//session := authapi.IsAuthenticated(r)
+	//if session == nil && !preloaded.PublicMedia {
+	//	userapi.LoginHandler(w, r)
+	//	return
+	//}
+
+	r.URL.Path = strings.TrimPrefix(r.URL.Path, "/media/")
+	file, err := os.Open("./media/" + r.URL.Path)
+	if err != nil {
+		// @todo, redo
+		// uadminhttp.PageErrorHandler(w, r, session)
+		return
+	}
+	io.Copy(w, file)
+	file.Close()
+
+	// Delete the file if exported to excel
+	if strings.HasPrefix(r.URL.Path, "export/") {
+		filePart := strings.TrimPrefix(r.URL.Path, "export/")
+		if filePart != "" && !strings.HasPrefix(filePart, "index.html") {
+			os.Remove("./media/" + r.URL.Path)
+		}
+	}
+}
+

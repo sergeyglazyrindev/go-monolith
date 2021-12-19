@@ -1,0 +1,18 @@
+ARG  BASE=go-monolith/go-monolith:release
+FROM $BASE
+ARG  ARCH=amd64
+ENV environment=go-monolith
+ENV GOMONOLITH_PATH=/go-monolith
+ENV GOROOT=/usr/local/go
+ENV GOPATH=/go-monolith
+ENV PATH=$GOPATH/bin:$GOROOT/bin:$PATH
+RUN apt-get -y update \
+    && apt-get -y install libxml2 libc6 libc-bin \
+    && rm -rf /var/lib/apt/lists/*
+RUN mkdir -p /go-monolith
+COPY go-monolith.$ARCH /go-monolith/go-monolith
+RUN chmod +x /go-monolith/go-monolith
+RUN mkdir -p /go-monolith/uploads
+EXPOSE 8080
+# COPY go-monolith.yml /go-monolith/configs/go-monolith.yml
+ENTRYPOINT ls -Rla /go-monolith/main

@@ -1,0 +1,91 @@
+swagger: '2.0'
+openapi: 3.0.0
+info:
+  version: 0.1.0
+  title: OAIE Sample
+  description: >
+    https://github.com/OAIE/oaie-sketch
+
+    <!--OAIE.viz--><div
+    style='height:500px;background-color:#eee;overflow:auto;position:relative;white-space:nowrap;border-radius:10px;'><span
+    style='border-bottom:1px solid
+    black;position:absolute;left:392.311px;top:242.996px;width:132px;transform:matrix(0.432868,
+    -0.901457, 0.901457, 0.432868, 0, 0);transform-origin:0 0;'><span
+    style='border:1px solid
+    black;width:5px;height:5px;position:absolute;right:0;transform:rotate(45deg);transform-origin:100%
+    0;border-left:0;border-bottom:0;'></span></span><span
+    style='border-bottom:1px solid
+    black;position:absolute;left:675.997px;top:194.101px;width:184.984px;transform:matrix(-0.864897,
+    -0.501949, 0.501949, -0.864897, 0, 0);transform-origin:0 0;'><span
+    style='border:1px solid
+    black;width:5px;height:5px;position:absolute;right:0;transform:rotate(45deg);transform-origin:100%
+    0;border-left:0;border-bottom:0;'></span></span><div
+    oaie-key='operation.get./sample/{sampleId}' style='border:1px solid rgb(97,
+    175, 254);background:rgb(240, 247,
+    255);position:absolute;left:293px;top:243px;width:153px;height:95px;padding:5px;border-radius:5px;'><div><b>get/sample/{sampleId}</b></div><div
+    style='white-space:normal'>getSample </div><div>sampleId
+    (string)</div></div><div oaie-key='operation.put./sample/{sampleId}'
+    style='border:1px solid rgb(252, 161, 48);background:rgb(255, 246,
+    236);position:absolute;left:676px;top:191px;width:153px;height:95px;padding:5px;border-radius:5px;'><div><b>put/sample/{sampleId}</b></div><div
+    style='white-space:normal'>putSample </div><div>sampleId
+    (string)</div></div><div oaie-key='schema.Sample'
+    style='position:absolute;left:429px;top:28px;width:87px;height:96px;border:1px
+    solid
+    silver;background:white;padding:5px;border-radius:5px;'><div><b>Sample</b></div><div>one
+    (string)</div><div>two (string)</div></div></div><div
+    style='padding:5px;color:gray;float:right;'>OAIE
+    visualization</div><!--/OAIE.viz-->
+servers:
+  - url: 'localhost:8080'
+paths:
+  '/sample/{sampleId}':
+    get:
+      operationId: getSample
+      tags:
+        - Sample
+      parameters:
+        - in: path
+          name: sampleId
+          schema:
+            type: string
+          required: true
+      responses:
+        '200':
+          description: Get the Sample
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Sample'
+      _method: get
+      _path: '/sample/{sampleId}'
+      _key: 'operation.get./sample/{sampleId}'
+    put:
+      operationId: putSample
+      tags:
+        - Sample
+      parameters:
+        - in: path
+          name: sampleId
+          schema:
+            type: string
+          required: true
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Sample'
+      responses:
+        '204':
+          description: No content
+      _method: put
+      _path: '/sample/{sampleId}'
+      _key: 'operation.put./sample/{sampleId}'
+components:
+  schemas:
+    Sample:
+      properties:
+        one:
+          type: string
+        two:
+          type: string

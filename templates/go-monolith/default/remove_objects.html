@@ -1,0 +1,83 @@
+{{Include "header"}}
+{{Include "header-bar"}}
+<style type="text/css">
+    .removal-object-list {
+        margin-top: 10px;
+    }
+    .whole-removal-object-list {
+        margin-bottom: 100px;
+    }
+    .whole-removal-object-list > li {
+        list-style-type: none;
+    }
+    .removal-object-list li {
+        list-style-type: square;
+    }
+    input[type="submit"] {
+        background: #ba2121;
+        border-radius: 4px;
+        padding: 10px 15px;
+        color: #fff;
+        border: none;
+        cursor: pointer;
+        margin: 2px 0;
+
+    }
+    .cancel-link {
+        display: inline-block;
+        vertical-align: middle;
+        background: #ddd;
+        border-radius: 4px;
+        padding: 10px 15px;
+        color: #333;
+        margin: 0 0 0 10px;
+        cursor: pointer;
+        text-decoration: none;
+    }
+    .cta {
+        position: fixed;
+        bottom: 30px;
+        left: 30px;
+    }
+</style>
+<div class="container-fluid main-content admin-page">
+    <div class="col-xs-12 justify-content-md-center" style="position:relative;padding:0px;margin:0px 0px 0px 0px; bottom:65px; top:30px;">
+        <h1>{{Tf .Language.Code "Are you sure"}}?</h1>
+        <p>{{Tf .Language.Code "Are you sure you want to delete selected"}} {{Tf .Language.Code .AdminPage.ModelName}} ? {{Tf .Language.Code "All of the following objects and their related items will be deleted:"}}</p>
+        <h2>{{Tf .Language.Code "Objects"}}</h2>
+        <form method="POST">
+            <input type="hidden" name="csrf-token" value="{{CSRF .SessionKey}}" />
+            <input type="hidden" name="object_ids" value="{{ .ObjectIds }}" />
+            <input type="hidden" name="removal_confirmed" value="true" />
+            <ul class="whole-removal-object-list">
+            {{ range $removalTree := .RemovalPlan }}
+                <li>
+                <ul class="removal-object-list">
+                {{ range $removalNode := $removalTree }}
+                    <li class="removal-tree level" style="margin-left: {{ mul $removalNode.Level 10 }}px;">
+                        {{ $removalNode.Explanation }}
+                    </li>
+                {{ end }}
+                </ul>
+                </li>
+            {{ end }}
+            </ul>
+            <div class="cta">
+                <input type="submit" value="{{Tf .Language.Code "Yes, I'm sure"}}" />
+                <a href="#" class="button cancel-link">{{Tf .Language.Code "No, take me back"}}</a>
+            </div>
+        </form>
+    </div>
+</div>
+<script type="text/javascript">
+    $('.cancel-link').click(function(ev) {
+        ev.preventDefault();
+        var url = location.pathname.replace(/\/[^\/]+\/?$/, '');
+        if (location.search.length) {
+            url += '?' + location.search;
+        }
+        location.href = url;
+    });
+
+</script>
+{{Include "footer"}}

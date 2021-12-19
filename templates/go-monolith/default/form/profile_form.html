@@ -1,0 +1,56 @@
+<form method="POST" action="" enctype="multipart/form-data">
+    <input type="hidden" name="csrf-token" value="{{CSRF .RequestContext.SessionKey}}" />
+    <br/>
+    {{ if .FormError }}
+            {{ range $generalError := .FormError.GeneralErrors }}
+            <div class="error-cont">
+                                                                <span>
+                                                                    {{Translate $generalError }}
+                                                                </span>
+            </div>
+            {{ end }}
+    {{ end }}
+    <div class="col-sm-3">
+        <br />
+        <div class="list-group">
+            {{ if FormFieldValue "Photo" nil}}
+              <span class="list-group-item">
+                <center>
+                  <img src="{{ FormFieldValue "Photo" nil}}" style="width:100%">
+                </center>
+              </span>
+            {{ end }}
+            <button type="submit" class="pointer list-group-item search"> <i class="fa fa-save fa-fw" aria-hidden="true"></i>&nbsp; {{Translate "Save Changes"}}</button>
+            <button type="button" class="pointer list-group-item search" onclick="$('#myModal').modal('show');"><i class="fa fa-unlock-alt fa-fw" aria-hidden="true"></i>&nbsp; {{Translate "changepassword"}}</button>
+            {{ $otpRequired := FormFieldValue "OTPRequired" nil }}
+            {{if ne $otpRequired false }}
+            <a type="button" style="text-align:left;" id="disable2FactorAuth" class="btn pointer list-group-item search" href="{{.RequestContext.RootURL}}/profile/?otp_required=0"><i class="fa fa-lock fa-fw" aria-hidden="true"></i>&nbsp; {{Translate "Disable 2-Factor Auth"}}</a>
+            {{else}}
+            <a type="button" style="text-align:left;" id="enable2FactorAuth" class="btn pointer list-group-item search" href="{{.RequestContext.RootURL}}/profile/?otp_required=1"><i class="fa fa-lock fa-fw" aria-hidden="true"></i>&nbsp; {{Translate "Enable 2-Factor Auth"}}</a>
+            {{end}}
+        </div>
+    </div>
+    <div class="col-sm-9">
+        <div class="form-horizontal form-signin">
+            {{ RenderFieldGroups }}
+            {{ if .RequestContext.OTPImage }}
+            <div class="form-group search">
+                <div class="input-group">
+                    <span style="min-width:140px;" class="input-group-addon camelcaseFix">{{Translate "2FA Verification"}}</span>
+                    <img src="{{ .RequestContext.OTPImage }}">
+                </div>
+            </div>
+            {{ end }}
+        </div>
+        {{if .ErrorMessage}}
+        <div class="alert alert-warning">
+            <strong><i class="fa fa-exclamation"></i></strong>&nbsp;{{Translate .ErrorMessage}}
+        </div>
+        {{end}}
+        {{if .ChangesSaved}}
+        <div class="alert alert-info">
+            <strong>{{Translate "Info:"}}</strong>&nbsp;&nbsp;{{Translate "Changes Successfully Applied"}}!
+        </div>
+        {{end}}
+    </div>
+</form>

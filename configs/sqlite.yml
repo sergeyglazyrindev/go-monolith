@@ -1,0 +1,21 @@
+db:
+  default:
+    type: "sqlite"
+    name: "/persist/test.db"
+admin:
+  listen_port: 8080
+api:
+  listen_port: 5000
+auth:
+  max_username_length: 40
+  min_username_length: 8
+  min_password_length: 8
+swagger:
+  path_to_spec: configs/api-spec.yml
+  listen_port: 8082
+  api_editor_listen_port: 8083
+gomonolith:
+  secure_cookie: false
+  http_only_cookie: false
+  debug_tests: false
+  upload_path: upload-for-tests

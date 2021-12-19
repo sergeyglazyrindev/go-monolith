@@ -1,0 +1,6 @@
+{{$requestContext := GetRenderContext}}
+{{ range $i, $Column := .Columns }}
+    {{ range $j, $Field := $Column.Fields }}
+      {{ $Field.FieldConfig.Widget.Render $requestContext $Field }}
+    {{ end }}
+{{ end }}

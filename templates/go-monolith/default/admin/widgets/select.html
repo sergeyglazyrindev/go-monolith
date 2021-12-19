@@ -1,0 +1,44 @@
+{{ if not .ShowOnlyHtmlInput }}
+  <td class="hidden-xs">
+    <label {{ if .HelpText }}data-toggle="tooltip" data-placement="bottom" data-original-title="{{ Translate .HelpText }}"{{ end }} class="col-sm-12 control-label form_label"><span class="camelcaseFix">{{ GetDisplayName (Translate .FieldDisplayName) }}</span>:
+      <span class="{{ if .HelpText }}text-muted{{ end }}" style="font-size:12px;">
+                          {{ if .HelpText }}
+                              <i class="fa fa-question-circle"></i>:
+                          {{ end }}
+                          {{ if .Required }}
+                              <span style="color:#f00;font-weight:bold;">&nbsp;*</span>
+                          {{ end }}
+                      </span>
+    </label>
+  </td>
+  <td style="width:80%;" class="search">
+    <label class="col-sm-12 control-label form_label visible-xs"><span class="camelcaseFix">{{ GetDisplayName (Translate .FieldDisplayName) }}</span>:{{ if .Required }}<span style="color:#f00;font-weight:bold;">&nbsp;*</span>{{ end }}</label>
+    <div class="col-sm-12 ">
+      <div class="input-group col-sm-12">
+{{ end }}
+      {{ if .FormErrorNotEmpty }}
+      {{ range $error := .FormError }}
+      <div class="error-cont">
+        <span>{{ Translate $error }}</span>
+      </div>
+      {{ end }}
+      {{ end }}
+      <select {{ if .Multiple }}multiple{{ end }} name="{{.Name }}" data-placeholder="{{ Translate "Select"}}" class="chosen-select form-control" tabindex="2" {{ range $k, $v := .Attrs }} {{ attr $k }}="{{ safe $v }}"{{ end }} >
+      {{ range $groupName, $groupChoices := .OptGroups }}
+      {{ if $groupName }}<optgroup label="{{ Translate $groupName }}">{{end}}
+      {{ range $i, $option := $groupChoices }}
+      {{Include $option.OptionTemplateName $option }}
+      {{end}}
+      {{ if $groupName }}
+    </optgroup>
+      {{end}}
+      {{end}}
+      </select>
+{{ if not .ShowOnlyHtmlInput }}
+      {{ if .HelpText }}
+      <span class="text-muted" style="font-size:12px;"><i class="fa fa-question-circle"></i> {{ Translate .HelpText }}</span>
+      {{ end }}
+    </div>
+  </div>
+</td>
+{{ end }}

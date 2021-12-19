@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{{Tf .Language.Code PageTitle }}</title>
+    <link rel="shortcut icon" href="{{.FavIcon}}"/>
+    <meta charset="UTF-8" />
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <link rel="stylesheet" href="/static-inbuilt/go-monolith/assets/bootstrap/3.3.7/css/bootstrap.css" >
+    <link rel="stylesheet" href="/static-inbuilt/go-monolith/assets/fa/css/all.min.css">
+    <link rel="stylesheet" href="/static-inbuilt/go-monolith/assets/bootstrap/3.3.7/css/bootstrap-theme.css" >
+    <link rel="stylesheet" href="/static-inbuilt/go-monolith/assets/datepicker/css/bootstrap-datetimepicker.min.css">
+    <link rel="stylesheet" href="/static-inbuilt/go-monolith/assets/chosen/chosen.css">
+    <link rel="stylesheet" href="/static-inbuilt/go-monolith/assets/admin/main.css">
+    <link rel="stylesheet" href="/static-inbuilt/go-monolith/assets/css/hover.css">
+    <link rel="stylesheet" href="/static-inbuilt/go-monolith/assets/spinner/src/jRoll.css">
+    <link rel="stylesheet" href="/static-inbuilt/go-monolith/assets/css/form.css">
+    <link rel="stylesheet" href="/static-inbuilt/go-monolith/assets/js/jqueryui/jquery-ui.min.css">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+    <style type="text/css">
+        #model-actions {
+            width: 200px;
+            display: inline-block;
+        }
+        #action-form button.button {
+            display: inline-block;
+            margin-left: 10px;
+        }
+        #action-form action-description {
+            padding-left: 10px;
+        }
+        ul.breadcrumbs {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+        }
+        .breadcrumb-item {
+            list-style-type: none;
+            display: inline-block;
+        }
+        ul.breadcrumbs li:first-child {
+            margin-left: 10px;
+        }
+        ul.breadcrumbs li:after {
+            content: "/";
+            color: #555;
+            font-size: 30px;
+            vertical-align: middle;
+            margin: 0 5px;
+        }
+        ul.breadcrumbs li:last-child:after {
+            content: "";
+            color: #555;
+            font-size: 30px;
+            vertical-align: middle;
+            margin: 0;
+        }
+        .breadcrumb-item i {
+            margin-right: 5px;
+        }
+        .bold {
+             font-weight: 600;
+        }
+        .user-menu {
+            margin-bottom: 0;
+        }
+        .user-menu > tbody > tr:first-child > td {
+            border-top: none;
+        }
+    </style>
+    {{Include "gomonolithjs"}}
+</head>
+<body{{if .Language.RTL}} dir="rtl"{{end}}>

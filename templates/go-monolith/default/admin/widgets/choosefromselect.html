@@ -1,0 +1,36 @@
+<td class="hidden-xs">
+    <label {{ if .HelpText }}data-toggle="tooltip" data-placement="bottom" data-original-title="{{ Translate .HelpText }}"{{ end }} class="col-sm-12 control-label form_label"><span class="camelcaseFix">{{ GetDisplayName (Translate .FieldDisplayName) }}</span>:
+        <span class="{{ if .HelpText }}text-muted{{ end }}" style="font-size:12px;">
+                        {{ if .HelpText }}
+                            <i class="fa fa-question-circle"></i>:
+                        {{ end }}
+                        {{ if .Required }}
+                            <span style="color:#f00;font-weight:bold;">&nbsp;*</span>
+                        {{ end }}
+                    </span>
+    </label>
+</td>
+<td style="width: 80%">
+    <input class="form-control target-input strings" name="{{.Name}}" type="hidden" value="{{.Value}}" {{ range $k, $v := .Attrs }} {{ attr $k }}="{{ safe $v }}"{{ end }} {{if .ReadOnly}} readonly {{end}} style="border-radius:4px;">
+    <div class="choose-from-select related-widget-wrapper">
+        {{ if .FormErrorNotEmpty }}
+        {{ range $error := .FormError }}
+        <div class="error-cont">
+            <span>{{ Translate $error }}</span>
+        </div>
+        {{ end }}
+        {{ end }}
+        {{ range $index, $widget := .Subwidgets }}
+            <div class="select {{ $widget.SelectorGeneralClass }}">{{ Include $widget.TemplateName $widget }}</div>
+            {{ if $widget.GenerateSelector }}
+                <ul class="selector-chooser"><li><a title="{{ Translate "Choose" }}" href="#" class="selector-add">{{ Translate "Choose" }}</a></li><li><a title="{{ Translate "Remove" }}" href="#" class="selector-remove">{{ Translate "Remove" }}</a></li></ul>
+            {{ end }}
+        {{ end }}
+        {{ if .AddNewLink }}
+            <a class="related-widget-wrapper-link add-related" href="{{ .AddNewLink }}" title="{{ Translate .AddNewTitle }}"><img src="/static-inbuilt/go-monolith/icon-addlink.svg" alt="{{ Translate "Add" }}"></a>
+        {{ end }}
+    </div>
+    {{ if .HelpText }}
+    <div class="help">{{ Translate .HelpText }}</div>
+    {{ end }}
+</td>

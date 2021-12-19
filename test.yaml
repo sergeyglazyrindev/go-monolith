@@ -1,0 +1,5 @@
+db:
+  default:
+    type: "sqlite"
+api:
+  listen_port: 5000

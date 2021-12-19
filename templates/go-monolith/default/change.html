@@ -1,0 +1,321 @@
+{{Include "header"}}
+{{Include "header-bar"}}
+<style type="text/css">
+    .hide-text {
+        color: rgba(0,0,0,0) !important;
+    }
+    .add-new-inline {
+        margin: 10px 0;
+    }
+    .remove-inline {
+        cursor: pointer;
+    }
+</style>
+{{ if .ID }}
+    <form method="POST" id="delete-object-form" action="{{ .ListURL }}/delete_permanently/">
+        <input type="hidden" name="csrf-token" value="{{CSRF .SessionKey}}" />
+        <input type="hidden" name="object_ids" value="{{ .ID }}" />
+    </form>
+{{ end }}
+<div class="container-fluid main-content admin-page">
+    <div class="col-xs-12 justify-content-md-center" style="position:relative;padding:0px;margin:0px 0px 0px 0px; bottom:65px; top:30px; margin-bottom: 42px;">
+        <form method="POST" action="" enctype="multipart/form-data" class="form-horizontal" style="padding: 20px; margin: 0 auto;">
+            <div class="tab-content">
+                <ul class="nav nav-tabs admin_font nab-tabs capitalized bold" id="TabNavigation" role="tablist">
+                    <li id="trigger_General-Data" class="tab_button nav-item active">
+                        <a style="margin:0px;" id="trigger_General-Data-tab" href="#General-Data" class="camelcaseFix trigger_hash nav-link active" aria-controls="General-Data" role="tab" data-toggle="tab" aria-selected="true">{{Tf .Language.Code .PageTitle}}</a>
+                    </li>
+                    {{$Language := .Language}}
+                    {{ range $inline := .AdminPageInlineRegistry.GetAll }}
+                        <li id="trigger_{{  $inline.GetInlineID }}" class="tab_button nav-item camelcaseFix trigger_hash nav-link"><a style="margin:0px;" href="#{{  $inline.GetInlineID }}" class="camelcaseFix trigger_hash nav-link" aria-selected="false" aria-controls="{{  $inline.GetInlineID }}" role="tab" id="trigger_{{  $inline.GetInlineID }}-tab" data-toggle="tab">{{Tf $Language.Code $inline.VerboseNamePlural}}</a></li>
+                    {{ end }}
+                </ul>
+                <div class="tab-content" id="TabNavigationContent">
+                    <div id="General-Data" class="tab-pane active" role="tabpanel" aria-labelledby="trigger_General-Data-tab">
+                        {{ if .Message }}
+                        <div class="uadmin-alert alert alert-info">
+                            <strong><i class="fa fa-info-circle fa-2x"></i></strong>&nbsp;&nbsp;<span>{{Tf $Language.Code .Message}}</span>
+                        </div>
+                        {{ end }}
+                        {{ if .Error }}
+                        <div class="uadmin-alert alert alert-danger">
+                            <strong><i class="fa fa-info-circle fa-2x"></i></strong>&nbsp;&nbsp;<span>{{Tf $Language.Code .Error}}</span>
+                        </div>
+                        {{ end }}
+                        {{$userObject := .GetUserObject }}
+                        {{$adminPage := .AdminPage }}
+                        {{ if .AdminModelActionRegistry.IsThereAnyActionsToShowOnEditPage $userObject $adminPage }}
+                            <div class="col-xs-12 col-sm-12" style="padding:0px;">
+                                   {{ $idValue := .ID }}
+                                    {{ range $adminModelAction := .AdminModelActionRegistry.GetAllModelActionsForUser $userObject $adminPage }}
+                                        {{ if $adminModelAction.Placement.DisplayOnEditPage }}
+                                            {{ if ne $idValue 0 }}
+                                                <a class="btn btn-primary pull-right" href="{{.CurrentURL}}/{{ $adminModelAction.SlugifiedActionName }}/">
+                                                    {{Tf $Language.Code $adminModelAction.ActionName}}
+                                                </a>
+                                            {{ end }}
+                                        {{ end }}
+                                    {{ end }}
+                            </div>
+                        {{ end }}
+                        {{ .Form.Render }}
+                    </div>
+                    {{ $model := .Model }}
+                    {{ $ID := .ID }}
+                    {{ $requestParams := .AdminRequestParams }}
+                    {{ $currentAdminContext := .CurrentAdminContext }}
+                    {{ $currentURL := .CurrentURL }}
+                    {{ $listEditableFormsForInlines := .ListEditableFormsForInlines }}
+                    {{ range $inline := .AdminPageInlineRegistry.GetAll }}
+                        <div id="{{  $inline.GetInlineID }}" data-inlineid="{{ $inline.GetInlineID}}" class="tab-pane" role="tabpanel" aria-labelledby="trigger_{{  $inline.GetInlineID }}-tab">
+                            <div class="form-example hide">
+                                {{ $inline.RenderExampleForm $currentAdminContext }}
+                            </div>
+                            <div class="add-new-inline col-xs-12" style="padding:0px;">
+                                <a class="hidden-sm hidden-md hidden-lg btn-xs btn btn-primary search pull-right" href="javascript:void(0)">
+                                    <i class="fa fa-plus"></i> {{Tf $Language.Code "Add New"}} {{Tf $Language.Code $inline.VerboseName}}
+                                </a>
+
+                                <a class="hidden-xs btn btn-primary search pull-right" href="javascript:void(0)">
+                                    <i class="fa fa-plus"></i> {{Tf $Language.Code "Add New"}} {{Tf $Language.Code $inline.VerboseName}}
+                                </a>
+                            </div>
+                            <!-- // @todo handle stackedinline -->
+                            {{ if eq $inline.InlineType "tabular" }}
+                                <table style="margin:0px;padding:0px;width:100%;" class="table table-striped  table-bordered  table-hover table-condensed float-header">
+                                    <thead class="admin_font" >
+                                        <tr class="table-header capitalized">
+                                            <th class="checkbox-container" style="width: 90px;">
+                                                <input class="main_check" type="checkbox"> {{Tf $Language.Code "Delete" }} ?
+                                            </th>
+                                            {{range $inline.ListDisplay.GetAllFields}}
+                                                <th class="pointer">
+                                                    {{Tf $Language.Code (GetDisplayName .DisplayName) }}
+                                                </th>
+                                            {{end}}
+                                        </tr>
+                                    </thead>
+                                    <tbody class="items-cont">
+                                        {{ $listDisplay := $inline.ListDisplay }}
+                                        {{ range $form := $listEditableFormsForInlines.GetForInlineNew $inline.Prefix}}
+                                            {{ if $form.FormError }}
+                                                <tr>
+                                                    <td colspan="{{ add $listDisplay.GetFieldsCount 1 }}">
+                                                        {{ range $generalError := $form.FormError.GeneralErrors }}
+                                                            <div class="error-cont">
+                                                                <span>
+                                                                    {{Tf $Language.Code $generalError }}
+                                                                </span>
+                                                            </div>
+                                                        {{ end }}
+                                                    </td>
+                                                </tr>
+                                            {{ end }}
+                                            <tr>
+                                                <td onclick="$(this).parent().parent().parent().find('.main_check').prop('checked', false);">
+                                                    <input  class="item_check" type="checkbox" name="{{ $inline.GetInlineID}}-object_id-to-remove-{{ $form.Prefix }}">
+                                                </td>
+                                                {{range $field := $listDisplay.GetAllFields}}
+                                                <td>
+                                                    {{ if $field.Field }}
+                                                    {{ $fieldExistsInTheForm := $form.ExistsField $field }}
+                                                    {{ if $fieldExistsInTheForm }}
+                                                    {{ $fieldEditable := $form.FieldRegistry.GetByName $field.Field.Name }}
+                                                    {{ $fieldEditable.FieldConfig.Widget.Render $form.FormRenderContext $field.Field }}
+                                                    {{ else }}
+                                                    {{ $field.GetValue $form.FormRenderContext.Model}}
+                                                    {{ end }}
+                                                    {{ end }}
+                                                    {{ if not $field.Field }}
+                                                    {{ $field.GetValue $form.FormRenderContext.Model}}
+                                                    {{ end }}
+                                                </td>
+                                                {{ end }}
+                                            </tr>
+                                        {{end}}
+                                        {{ if $ID }}
+                                            {{ range $iterateAdminObjects := ($inline.GetAll $currentAdminContext $model) }}
+                                                <tr>
+                                                    <td onclick="$(this).parent().parent().parent().find('.main_check').prop('checked', false);">
+                                                        <input  type="hidden" name="{{ $inline.GetInlineID}}-object_id-{{ $iterateAdminObjects.ID }}">
+                                                        <input  class="item_check" type="checkbox" name="{{ $inline.GetInlineID}}-object_id-to-remove-{{ $iterateAdminObjects.ID }}">
+                                                    </td>
+                                                    {{ $form := $listEditableFormsForInlines.GetForInlineAndForModel $inline.Prefix $iterateAdminObjects.ID}}
+                                                    {{range $field := $listDisplay.GetAllFields}}
+                                                        <td>
+                                                            {{ if $field.Field }}
+                                                                {{ $fieldExistsInTheForm := $form.ExistsField $field }}
+                                                                {{ if $fieldExistsInTheForm }}
+                                                                {{ $fieldEditable := $form.FieldRegistry.GetByName $field.Field.Name }}
+                                                                {{ $fieldEditable.FieldConfig.Widget.Render $iterateAdminObjects.RenderContext $field.Field }}
+                                                                {{ else }}
+                                                                {{ $field.GetValue $iterateAdminObjects.Model}}
+                                                                {{ end }}
+                                                            {{ end }}
+                                                            {{ if not $field.Field }}
+                                                                {{ $field.GetValue $iterateAdminObjects.Model}}
+                                                            {{ end }}
+                                                        </td>
+                                                    {{end}}
+                                                </tr>
+                                            {{ end }}
+                                        {{ end }}
+                                    </tbody>
+                                </table>
+                            {{ end }}
+                        </div>
+                    {{ end }}
+                </div>
+            </div>
+            <div class="fixed-bottom bg-black3 default-padding z-index9">
+                <div>
+                    {{ if .ID }}
+                    <div class="col-sm-4 col-xs-2">
+                        <button onclick="$('#delete-object-form').submit(); return false;" class="hidden-xs btn btn-danger capitalized"><i class="fa fa-trash fa-fw"></i>&nbsp;{{Tf $Language.Code "Delete object" }}</button>
+                    </div>
+                    {{ end }}
+                </div>
+                <div class="pull-right">
+
+                    <button type="submit" class="return_url_hide no-borderradius btn btn-primary" style="display:inline-block;" name="save" value="">
+                        {{Tf $Language.Code "Save" }}
+                    </button>
+                    <button type="submit" class="return_url_hide no-borderradius btn btn-primary" style="display:inline-block;" name="save_add_another" value="">
+                        {{Tf $Language.Code "Save and Add Another" }}
+                    </button>
+                    <button type="submit" class="no-borderradius btn btn-primary" style="display:inline-block;" name="save_continue" value="continue">
+                        {{Tf $Language.Code "Save and Continue" }}
+                    </button>
+
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+<script type="text/javascript">
+    $('.main_check').click(function(ev) {
+        var status = $(ev.currentTarget).prop('checked');
+        $(ev.currentTarget).parent().parent().parent().parent().find('.item_check').prop('checked', status);
+    });
+    function preventDefaults (e) {
+        e.preventDefault();
+        e.stopPropagation();
+    }
+
+    function handleDrop(e){
+        $(this).removeClass("droping-file");
+        var files = e.originalEvent.dataTransfer.files;
+        if (files.length == 0) {
+            return
+        }
+        var field = $(e.currentTarget).attr("id").replace("drop-file-", "");
+        $("#"+field+"-filename").val(files[0].name);
+        $("input[name='"+field+"']")[0].files = files;
+        /*
+        var reader = new FileReader()
+        reader.readAsArrayBuffer(files[0]);
+        reader.onloadend = function() {
+          var raw = btoa(String.fromCharCode.apply(null, new Uint8Array(reader.result)));
+          var field = $(e.currentTarget).attr("id").replace("drop-file-", "");
+          $("#"+field+"-raw").val(files[0].name+"://"+raw);
+          $("#"+field+"-filename").val(files[0].name);
+          $("input[name='"+field+"']").removeAttr("required");
+        };
+         */
+    }
+
+    function handleFileUploading(e){
+        $(this).removeClass("droping-file");
+        var files = $(e.currentTarget)[0].files;
+        if (files.length == 0) {
+            return
+        }
+        var field = $(e.currentTarget).attr("name");
+        $("#"+field+"-filename").val(files[0].name);
+        /*
+        var reader = new FileReader()
+        reader.readAsArrayBuffer(files[0]);
+        reader.onloadend = function() {
+          var raw = btoa(String.fromCharCode.apply(null, new Uint8Array(reader.result)));
+          var field = $(e.currentTarget).attr("id").replace("drop-file-", "");
+          $("#"+field+"-raw").val(files[0].name+"://"+raw);
+          $("#"+field+"-filename").val(files[0].name);
+          $("input[name='"+field+"']").removeAttr("required");
+        };
+         */
+    }
+
+    $(".drop-file").on("dragenter", preventDefaults);
+    $(".drop-file").on("dragenter", function(){$(this).addClass("droping-file");});
+
+    $(".drop-file").on("dragover", preventDefaults);
+    $(".drop-file").on("dragover", function(){$(this).addClass("droping-file");});
+
+
+    $(".drop-file").on("dragleave", preventDefaults);
+    $(".drop-file").on("dragleave", function(){$(this).removeClass("droping-file");});
+
+    $(".drop-file").on("drop", preventDefaults);
+    $(".drop-file").on("drop", handleDrop);
+    $(".drop-file input[type='file']").on("change", handleFileUploading);
+    $("[data-pswd-state]").on("click", function(e){
+        var $this = $(this),
+            $pswd = $this.closest(".pswd-holder").find("input[data-pswd-field]"),
+            state = $this.attr("data-pswd-state");
+        if (state === "hidden") {
+            //$pswd[0].type = "text";
+            $pswd.removeClass("hide-text");
+            $this
+                .attr("data-pswd-state", "shown")
+                .addClass("btn-danger")
+                .removeClass("btn-info")
+                .find("i.fa")
+                .addClass("fa-eye-slash")
+                .removeClass("fa-eye");
+        } else {
+            //$pswd[0].type = "password";
+            $pswd.addClass("hide-text");
+            $this
+                .attr("data-pswd-state", "hidden")
+                .addClass("btn-info")
+                .removeClass("btn-danger")
+                .find("i.fa")
+                .addClass("fa-eye")
+                .removeClass("fa-eye-slash");
+        }
+    });
+    var inlineNewNumbers = {};
+    $('body').delegate('.add-new-inline a.btn-primary', 'click', function(ev) {
+        var inlineCont = $(ev.currentTarget).parent().parent();
+        var formToAdd = inlineCont.find('.form-example.hide > table > tbody').clone();
+        var inlineId = inlineCont.data('inlineid');
+        var currentInlineNewNumber = inlineNewNumbers[inlineId] === undefined ? 1 : inlineNewNumbers[inlineId] + 1;
+        var formToAddHtml = formToAdd.html();
+        formToAddHtml = $(formToAddHtml.replaceAll('toreplacewithid', 'new' + currentInlineNewNumber.toString()));
+        inlineCont.find('.items-cont').prepend(formToAddHtml);
+        formToAddHtml.find("input").map(function(_, item) {
+            $(item).removeAttr("autocomplete");
+        });
+        $(formToAddHtml).find(".autocomplete").map(function(_, item) {
+            $(item).autocomplete({
+                source: $(item).data('autocompleteurl'),
+                minLength: 3,
+                select: function( event, ui ) {
+                    event.preventDefault();
+                    $('input[name="' + $(item).attr('name') + '-value"]').val(ui.item.value);
+                    $(item).val(ui.item.label);
+                }
+            });
+        });
+        inlineNewNumbers[inlineId] = currentInlineNewNumber;
+        inlineCont.trigger(inlineId + ':inline:addednew', inlineCont, formToAddHtml);
+    })
+    $('body').delegate('.remove-inline', 'click', function(ev) {
+        var contToRemove = $(ev.currentTarget).parent().parent();
+        var inlineCont = $(ev.currentTarget).parent().parent().parent().parent().parent();
+        var inlineId = inlineCont.data('inlineid');
+        inlineCont.trigger(inlineId + ':inline:removed', inlineCont, contToRemove);
+        contToRemove.remove();
+    });
+</script>
+{{Include "footer"}}

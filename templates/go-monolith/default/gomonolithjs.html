@@ -1,0 +1,66 @@
+<script type="text/javascript">
+    var RootURL = '{{.RootAdminURL}}/';
+    var Localization = {};
+    function setLocalization(localization) {
+        Localization = localization;
+    }
+    function Translate(translateMessage) {
+        if (translateMessage.Code) {
+            var translated = Localization[translateMessage.Code];
+            if (!translated) {
+                return translateMessage.Message;
+            }
+            if (translateMessage.Params.length > 0) {
+                return vsprintf(translated, translateMessage.Params);
+            } else {
+                return translated;
+            }
+        }
+        var translated = Localization[translateMessage];
+        if (!translated) {
+            return translateMessage;
+        }
+        return translated;
+    }
+</script>
+
+<script src="/localization/" type="text/javascript"></script>
+<script src="/static-inbuilt/go-monolith/dist/main.js" type="text/javascript"></script>
+<script type="text/javascript">
+    var signedOut = false;
+    $(document).ready(function() {
+        $('input.autocomplete').map(function(_, item) {
+           $(item).autocomplete({
+               source: $(item).data('autocompleteurl'),
+               minLength: 3,
+               select: function( event, ui ) {
+                   event.preventDefault();
+                   $('input[name="' + $(item).attr('name') + '-value"]').val(ui.item.value);
+                   $(item).val(ui.item.label);
+               }
+           });
+        });
+        $('#admin-logout').click(function(e) {
+            e.preventDefault();
+            if (signedOut) {
+                return;
+            }
+            signedOut = true;
+            e.preventDefault();
+            $.ajax({
+                url: "/auth/direct-for-admin/logout/?for-gomonolith-panel=1",
+                method: "POST",
+                processData: false,
+                contentType:"application/json; charset=utf-8",
+                success: function() {
+                    location.href = '{{.RootAdminURL}}/';
+                },
+                error: function(xhr) {
+                    alert(Translate('Error while logout'));
+                }
+            });
+        });
+        $('[data-toggle="tooltip"]').tooltip();
+    });
+</script>
+<script src="/static-inbuilt/go-monolith/assets/admin/main.js" type="text/javascript"></script>

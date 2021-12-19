@@ -1,0 +1,71 @@
+{{Include "header"}}
+{{Include "header-bar"}}
+{{Include "gomonolithjs"}}
+    <div class="container justify-content-md-center" style="margin-top: 65px;">
+      <center>
+        <br />
+        <h1 class="admin_font bold">{{.SiteName}} {{Tf .Language.Code "Dashboard"}}</h1>
+          <div class="col-xs-8 col-xs-offset-2">
+            <div class="input-group search">
+              <input type="text" class="form-control" id="search" placeholder="{{Tf .Language.Code "Search Dashboard e.g. item"}}">
+              <span class="input-group-addon"><i class="fa fa-search fa-fw"></i></span>
+            </div>
+          </div>
+        <br /><br />
+      </center>
+      <br />
+      <div class="col-sm-12" id="panel-container">
+      </div>
+      <div class="col-sm-12 text-muted admin_font">
+        <br /><br />
+        <span class="pull-right">{{Tf .Language.Code "Icons designed by"}}  <a class="bold" href="http://www.flaticon.com" target="_blank"> flaticon.com</a></span>
+      </div>
+      <div class="bottom-space col-sm-12 text-muted admin_font">
+
+      </div>
+    </div>
+
+    <script type="text/javascript">
+      var RootURL = '{{.RootAdminURL}}/';
+      var CurrentPath = '{{.CurrentPath}}';
+    </script>
+
+    <script type="text/javascript">
+
+    arrayVariable = JSON.parse({{ .Menu | safe }});
+    arrayVariableHeader = JSON.parse({{ .Menu | safe }});
+    //console.log(arrayVariable);
+    setHomeTabs(arrayVariable, '#panel-container', 'col-xs-12 col-sm-6 col-md-4');
+    setHeaderTabs(arrayVariableHeader, '#headtab-container', 'col-md-4');
+
+      $(function () {
+          $('.date').datetimepicker({
+            format: "YYYY-MM-DD HH:mm"
+          });
+      });
+    </script>
+    <script type="text/javascript">
+    fixcamelcase('camelcaseFix','');
+
+      //SEARCH THROUGH DASHBOARD
+      searchHome('#search');
+
+      $('.bread_hide').fadeOut();
+
+      $(function () {
+        $('[data-toggle="tooltip"]').tooltip()
+      });
+
+      {{if .Demo}}notifyDemo();{{end}}
+
+function handleSearch() {
+  $(window).on("keydown", function(e){
+    if(e.ctrlKey && e.keyCode==70){
+      e.preventDefault();
+      $("#search").focus();
+    }
+  });
+}
+handleSearch();
+    </script>
+{{Include "footer"}}

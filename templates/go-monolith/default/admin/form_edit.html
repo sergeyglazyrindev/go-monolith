@@ -1,0 +1,18 @@
+{{ Include "include_extra_static" }}
+{{ if not .DontGenerateFormTag }}
+    <form method="POST" action="" enctype="multipart/form-data" class="form-horizontal" style="padding: 20px; margin: 0 auto;">
+{{ end }}
+    {{ if .FormError }}
+        {{ range $generalError := .FormError.GeneralErrors }}
+        <div class="error-cont">
+            <span>{{ Translate $generalError }}</span>
+        </div>
+        {{ end }}
+    {{ end }}
+    <input type="hidden" name="csrf-token" value="{{CSRF .RequestContext.SessionKey}}" />
+    <table class="table table-hover table-bordered float-header table-condensed">
+        {{ RenderFieldGroups }}
+    </table>
+{{ if not .DontGenerateFormTag }}
+    </form>
+{{ end }}

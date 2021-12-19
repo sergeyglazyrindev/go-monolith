@@ -1,0 +1,2 @@
+gopherbadger -md="README.md" -manualcov=95
+

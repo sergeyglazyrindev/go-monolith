@@ -1,0 +1,24 @@
+{{ if not .ShowOnlyHtmlInput }}
+<td class="hidden-xs">
+    <label {{ if .HelpText }}data-toggle="tooltip" data-placement="bottom" data-original-title="{{ Translate .HelpText }}"{{ end }} class="col-sm-12 control-label form_label"><span class="camelcaseFix">{{ GetDisplayName (Translate .FieldDisplayName) }}</span>:
+        <span class="{{ if .HelpText }}text-muted{{ end }}" style="font-size:12px;">
+                        {{ if .HelpText }}
+                            <i class="fa fa-question-circle"></i>:
+                        {{ end }}
+                        {{ if .Required }}
+                            <span style="color:#f00;font-weight:bold;">&nbsp;*</span>
+                        {{ end }}
+                    </span>
+    </label>
+</td>
+<td style="width:80%;" class="search">
+    <label class="col-sm-12 control-label form_label visible-xs"><span class="camelcaseFix">{{ GetDisplayName (Translate .FieldDisplayName) }}</span>:{{ if .Required }}<span style="color:#f00;font-weight:bold;">&nbsp;*</span>{{ end }}</label>
+    <div class="col-sm-12 ">
+        <div class="input-group col-sm-12">
+{{ end }}
+            <textarea {{ if .ReadOnly }}readonly{{ end }} name="{{ .Name }}" {{ range $k, $v := .Attrs }} {{ attr $k }}="{{ safe $v }}"{{ end }}>{{ .Value }}</textarea>
+{{ if not .ShowOnlyHtmlInput }}
+        </div>
+    </div>
+</td>
+{{ end }}

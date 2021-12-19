@@ -1,0 +1,13 @@
+{{ Include "include_extra_static" }}
+<form method="POST" action="" enctype="multipart/form-data">
+    {{ if .FormError }}
+            {{ range $generalError := .FormError.GeneralErrors }}
+            <div class="error-cont">
+                                                                <span>
+                                                                    {{Translate $generalError }}
+                                                                </span>
+            </div>
+            {{ end }}
+    {{ end }}
+    {{ RenderFieldGroups }}
+</form>
