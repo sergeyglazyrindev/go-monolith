@@ -14,7 +14,7 @@ And then fully rewritten by @sergeyglazyrindev.
 
 For Documentation:
 
-- [Please check](https://uadmindocs.sergeyg.me/)
+- [Please check](https://go-monolithdocs.sergeyg.me/)
 
 Reach us at:
 

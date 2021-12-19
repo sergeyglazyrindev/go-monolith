@@ -6,7 +6,7 @@ on:
   pull_request:
     branches: [ master ]
 env:
-  UADMIN_PATH: /home/runner/work/go-monolith/go-monolith
+  GOMONOLITH_PATH: /home/runner/work/go-monolith/go-monolith
 jobs:
   build:
     runs-on: ubuntu-latest

@@ -39,7 +39,7 @@ include .mk/tests.mk
 
 define GOCOMPILE
 CGO_CFLAGS_ALLOW='.*' CGO_LDFLAGS_ALLOW='.*' $(GO) $1 \
-                -ldflags="${LDFLAGS} -B $(BUILD_ID) -X $(GOMONOLITH_GITHUB_VERSION)" \
+                -ldflags="${LDFLAGS} -B $(BUILD_ID) -X $(GO_MONOLITH_GITHUB_VERSION)" \
                 ${GOFLAGS} -tags="${BUILD_TAGS}" ${VERBOSE_FLAGS} -o /go-monolith/go-monolith \
                 cmd/go-monolith/main.go
 endef
