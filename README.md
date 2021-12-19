@@ -1,4 +1,4 @@
-# uAdmin the Golang Web Framework
+# GoMonolith the Golang Fully Featured Framework
 
 Easy to use, blazing fast and secure.
 
@@ -54,21 +54,14 @@ Social Media:
 - Error Handling
 - Export to Excel
 - Form and List customization
-- Image Cropping
-- IP address and port configuration
-<!-- - Log feature that keeps track of many things in your app
-- Metric System -->
-<!-- - Multilingual translation -->
+- Image Cropping (TBD)
+- Multilingual translation
 - Full Gorm integration
 - Pretty good security features (SSL, 2-Factor Authentication, Password Reset, Hash Salt Unique for Each user, Database Encryption)
-- Public access to media
-- Self relation of foreign key/many2many
 - Sending an email from your app by establishing an email configuration
-- System settings which can be used system wide to keep application settings
 - Tag support for fields
-<!-- - Translation files preloading -->
 - Validation for user input
-- Webcam support on image and file fields
+- Webcam support on image and file fields(TBD)
 
 ## Minimum requirements
 
