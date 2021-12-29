@@ -10,6 +10,7 @@ import (
 	"gorm.io/gorm/schema"
 	"net/http"
 	"reflect"
+	"strings"
 )
 
 type Blueprint struct {
@@ -34,10 +35,12 @@ func (b Blueprint) InitRouter(app core.IApp, group *gin.RouterGroup) {
 		if userSession == nil || userSession.GetUser() == nil {
 			type Context struct {
 				core.AdminContext
+				PrimaryFieldForSignin string
 			}
 			c := &Context{}
 			adminRequestParams := core.NewAdminRequestParams()
 			adminRequestParams.NeedAllLanguages = true
+			c.PrimaryFieldForSignin = strings.Title(core.CurrentConfig.D.GoMonolith.DirectAPISigninByField)
 			core.PopulateTemplateContextForAdminPanel(ctx, c, adminRequestParams)
 
 			tr := core.NewTemplateRenderer("Admin Login")

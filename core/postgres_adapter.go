@@ -271,6 +271,16 @@ func (d *PostgresAdapter) Range(operatorContext *GormOperatorContext, field *Fie
 	operatorContext.Tx = SQLConditionBuilder.Build(operatorContext.Tx, query, f, second)
 }
 
+func (d *PostgresAdapter) ArrayIncludes(operatorContext *GormOperatorContext, field *Field, value interface{}, SQLConditionBuilder ISQLConditionBuilder) {
+	query := fmt.Sprintf(" ? @> %s.%s ", operatorContext.TableName, field.DBName)
+	operatorContext.Tx = SQLConditionBuilder.Build(operatorContext.Tx, query, value)
+}
+
+func (d *PostgresAdapter) JSONContains(operatorContext *GormOperatorContext, field *Field, value interface{}, SQLConditionBuilder ISQLConditionBuilder) {
+	query := fmt.Sprintf("LOWER(%s.%s::text) LIKE LOWER('%%' || ? || '%%')", operatorContext.TableName, field.DBName)
+	operatorContext.Tx = SQLConditionBuilder.Build(operatorContext.Tx, query, value)
+}
+
 func (d *PostgresAdapter) BuildDeleteString(table string, cond string, values ...interface{}) *DeleteRowStructure {
 	deleteRowStructure := &DeleteRowStructure{SQL: fmt.Sprintf("DELETE FROM %s WHERE %s", table, cond), Values: values}
 	return deleteRowStructure
@@ -369,6 +379,10 @@ func (d *PostgresAdapter) StartDBShell(databaseSettings *DBSettings) error {
 
 func (d *PostgresAdapter) GetLastError() error {
 	return d.LastError
+}
+
+func (d *PostgresAdapter) ResetLastError() {
+	d.LastError = nil
 }
 
 func init() {

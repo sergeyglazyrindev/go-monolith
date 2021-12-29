@@ -1,6 +1,7 @@
 package core
 
 import (
+	"errors"
 	"fmt"
 	"html/template"
 	"mime/multipart"
@@ -91,7 +92,11 @@ func (api *AdminPageInline) GetAll(adminContext IAdminContext, model interface{}
 	return qs.IterateThroughWholeQuerySet()
 }
 
-func (api *AdminPageInline) ProceedRequest(afo IAdminFilterObjects, f *multipart.Form, model interface{}, adminContext IAdminContext) (InlineFormListEditableCollection, error) {
+func (api *AdminPageInline) ProceedRequest(afo IAdminFilterObjects, f *multipart.Form, model interface{}, adminContext IAdminContext, dontsave ...bool) (InlineFormListEditableCollection, error) {
+	dontSave := false
+	if len(dontsave) > 0 {
+		dontSave = dontsave[0]
+	}
 	collection := make(InlineFormListEditableCollection)
 	var firstEditableField *ListDisplay
 	qs := api.GetQueryset(adminContext, afo, model)
@@ -126,7 +131,9 @@ func (api *AdminPageInline) ProceedRequest(afo IAdminFilterObjects, f *multipart
 		inlineIDToRemove := f.Value[firstEditableField.Prefix+"-"+"object_id-to-remove-"+realInlineID[0]]
 		isNew := false
 		if !strings.Contains(inlineID, "new") {
-			qs.LoadDataForModelByID(realInlineID[0], modelI)
+			if !dontSave {
+				qs.LoadDataForModelByID(realInlineID[0], modelI)
+			}
 			form = api.ListDisplay.BuildFormForListEditable(adminContext, realInlineID[0], modelI, nil)
 			collection[realInlineID[0]] = form
 			if len(inlineIDToRemove) > 0 {
@@ -153,17 +160,19 @@ func (api *AdminPageInline) ProceedRequest(afo IAdminFilterObjects, f *multipart
 			if !formError.IsEmpty() {
 				err = true
 			} else {
-				if isNew {
-					error1 := afo.CreateNew(modelI)
-					if error1 != nil {
-						formError.AddGeneralError(error1)
-						err = true
-					}
-				} else {
-					error1 := afo.SaveModel(modelI)
-					if error1 != nil {
-						formError.AddGeneralError(error1)
-						err = true
+				if !dontSave {
+					if isNew {
+						error1 := afo.CreateNew(modelI)
+						if error1 != nil {
+							formError.AddGeneralError(error1)
+							err = true
+						}
+					} else {
+						error1 := afo.SaveModel(modelI)
+						if error1 != nil {
+							formError.AddGeneralError(error1)
+							err = true
+						}
 					}
 				}
 			}
@@ -171,7 +180,7 @@ func (api *AdminPageInline) ProceedRequest(afo IAdminFilterObjects, f *multipart
 		}
 	}
 	if err {
-		return collection, NewHTTPErrorResponse("inline_validation_error", "error while validating inlines")
+		return collection, errors.New("inline validation error")
 	}
 	return collection, nil
 }

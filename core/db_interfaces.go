@@ -46,6 +46,8 @@ type IDbAdapter interface {
 	IsNull(operatorContext *GormOperatorContext, field *Field, value interface{}, SQLConditionBuilder ISQLConditionBuilder)
 	Regex(operatorContext *GormOperatorContext, field *Field, value interface{}, SQLConditionBuilder ISQLConditionBuilder)
 	IRegex(operatorContext *GormOperatorContext, field *Field, value interface{}, SQLConditionBuilder ISQLConditionBuilder)
+	ArrayIncludes(operatorContext *GormOperatorContext, field *Field, value interface{}, SQLConditionBuilder ISQLConditionBuilder)
+	JSONContains(operatorContext *GormOperatorContext, field *Field, value interface{}, SQLConditionBuilder ISQLConditionBuilder)
 	BuildDeleteString(table string, cond string, values ...interface{}) *DeleteRowStructure
 	SetIsolationLevelForTests(db *gorm.DB)
 	Close(db *gorm.DB)
@@ -54,6 +56,7 @@ type IDbAdapter interface {
 	InitializeDatabaseForTests(databaseSettings *DBSettings)
 	StartDBShell(databaseSettings *DBSettings) error
 	GetLastError() error
+	ResetLastError()
 }
 
 var Db *gorm.DB

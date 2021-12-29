@@ -1,6 +1,7 @@
 package interfaces
 
 import (
+	"fmt"
 	"github.com/asaskevich/govalidator"
 	"github.com/gin-gonic/gin"
 	utils2 "github.com/sergeyglazyrindev/go-monolith/blueprint/auth/utils"
@@ -49,7 +50,8 @@ func (ap *DirectAuthForAdminProvider) Signin(c *gin.Context) {
 	defer database.Close()
 	db := database.Db
 	var user = core.GenerateUserModel()
-	db.Model(core.User{}).Where(&core.User{Username: json.SigninField}).First(user)
+	directAPISigninByField := core.CurrentConfig.D.GoMonolith.DirectAPISigninByField
+	db.Model(core.User{}).Where(fmt.Sprintf("%s = ?", directAPISigninByField), json.SigninField).First(&user)
 	if user.GetID() == 0 {
 		c.JSON(http.StatusBadRequest, core.APIBadResponseWithCode("login_credentials_incorrect", "login credentials are incorrect."))
 		return

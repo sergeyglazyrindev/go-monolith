@@ -3,6 +3,7 @@ package core
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 	"github.com/mattn/go-sqlite3"
 	"gorm.io/driver/sqlite"
@@ -278,6 +279,14 @@ func (d *SqliteAdapter) InitializeDatabaseForTests(databaseSettings *DBSettings)
 
 }
 
+func (d *SqliteAdapter) ArrayIncludes(operatorContext *GormOperatorContext, field *Field, value interface{}, SQLConditionBuilder ISQLConditionBuilder) {
+	d.LastError = errors.New("right now sqlite doesn't support filtering by array")
+}
+
+func (d *SqliteAdapter) JSONContains(operatorContext *GormOperatorContext, field *Field, value interface{}, SQLConditionBuilder ISQLConditionBuilder) {
+	d.LastError = errors.New("right now sqlite doesn't support searching in json")
+}
+
 func (d *SqliteAdapter) StartDBShell(databaseSettings *DBSettings) error {
 	commandToExecute := exec.Command(
 		"sqlite3", databaseSettings.Name,
@@ -299,6 +308,11 @@ func (d *SqliteAdapter) StartDBShell(databaseSettings *DBSettings) error {
 func (d *SqliteAdapter) GetLastError() error {
 	return d.LastError
 }
+
+func (d *SqliteAdapter) ResetLastError() {
+	d.LastError = nil
+}
+
 
 func sqliteGoMonolithDatetimeParse(dt string, tzName string, connTzname string) *time.Time {
 	if dt == "" {

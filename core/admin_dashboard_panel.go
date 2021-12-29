@@ -94,7 +94,7 @@ func (dap *DashboardAdminPanel) RegisterHTTPHandlers(router *gin.Engine) {
 						PopulateTemplateContextForAdminPanel(ctx, c, NewAdminRequestParams())
 						user := c.GetUserObject()
 						if user == nil {
-							ctx.AbortWithStatus(409)
+							ctx.Redirect(302, adminPage.GetURLToBackAfterSignin(ctx))
 							return
 						}
 						existsAnyPermission := user.BuildPermissionRegistry().IsThereAnyPermissionForBlueprint(adminPage.BlueprintName)
@@ -235,6 +235,7 @@ func (dap *DashboardAdminPanel) RegisterHTTPHandlers(router *gin.Engine) {
 						CurrentAdminContext         IAdminContext
 						ListEditableFormsForInlines *FormListEditableCollection
 						AdminPage                   *AdminPage
+						RequestMethod string
 					}
 
 					c := &Context{}
@@ -264,10 +265,11 @@ func (dap *DashboardAdminPanel) RegisterHTTPHandlers(router *gin.Engine) {
 					c.IsNew = true
 					c.AdminPageInlineRegistry = adminPage.InlineRegistry
 					c.AdminPage = adminPage
+					c.RequestMethod = ctx.Request.Method
 					form.ForAdminPanel = true
 					user := c.GetUserObject()
 					if user == nil {
-						ctx.AbortWithStatus(409)
+						ctx.Redirect(302, adminPage.GetURLToBackAfterSignin(ctx))
 						return
 					}
 					if ctx.Request.Method == "POST" {
@@ -296,25 +298,36 @@ func (dap *DashboardAdminPanel) RegisterHTTPHandlers(router *gin.Engine) {
 							if formError.IsEmpty() {
 								if adminPage.SaveModel != nil {
 									modelToSave = adminPage.SaveModel(modelToSave, ID, afo1)
-									if afo1.GetLastError() != nil {
-										return afo1.GetLastError()
+									err1 := afo1.GetLastError()
+									if err1 != nil {
+										for inline := range adminPage.InlineRegistry.GetAll() {
+											inlineListEditableCollection, _ := inline.ProceedRequest(afo1, requestForm, modelToSave, c, true)
+											c.ListEditableFormsForInlines.AddForInlineWholeCollection(inline.Prefix, inlineListEditableCollection)
+										}
+										return err1
 									}
 								} else {
 									afo1.GetInitialQuerySet().Model(modelToSave).Save(modelToSave)
-									if afo1.GetLastError() != nil {
-										return afo1.GetLastError()
+									err1 := afo1.GetInitialQuerySet().GetLastError()
+									if err1 != nil {
+										afo1.SetLastError(err1)
+										for inline := range adminPage.InlineRegistry.GetAll() {
+											inlineListEditableCollection, _ := inline.ProceedRequest(afo1, requestForm, modelToSave, c, true)
+											c.ListEditableFormsForInlines.AddForInlineWholeCollection(inline.Prefix, inlineListEditableCollection)
+										}
+										return err1
 									}
 								}
-								successfulInline := true
+								var successfulInline error
 								for inline := range adminPage.InlineRegistry.GetAll() {
 									inlineListEditableCollection, formError1 := inline.ProceedRequest(afo1, requestForm, modelToSave, c)
 									if formError1 != nil {
-										successfulInline = false
+										successfulInline = formError1
 									}
 									c.ListEditableFormsForInlines.AddForInlineWholeCollection(inline.Prefix, inlineListEditableCollection)
 								}
-								if !successfulInline {
-									return NewHTTPErrorResponse("error_inline_submit", "error while submitting inlines")
+								if successfulInline != nil {
+									return NewHTTPErrorResponse(successfulInline.Error(), successfulInline.Error())
 								}
 								if ctx.Query("_popup") == "1" {
 									mID := GetID(reflect.ValueOf(modelToSave))

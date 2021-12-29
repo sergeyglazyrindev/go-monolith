@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/asaskevich/govalidator"
+	"github.com/lib/pq"
 	"gorm.io/gorm"
 	"gorm.io/gorm/schema"
 	"html/template"
@@ -45,6 +46,8 @@ const SplitHiddenDateTimeWidgetType WidgetType = "splithiddendatetime"
 const SelectDateWidgetType WidgetType = "selectdate"
 const ChooseFromSelectWidgetType WidgetType = "choose_from_select"
 const FkLinkWidgetType WidgetType = "fklink"
+const JSONWidgetType WidgetType = "json"
+const ArrayWidgetType WidgetType = "array"
 
 type WidgetData map[string]interface{}
 type IWidget interface {
@@ -1034,6 +1037,99 @@ func (w *TextareaWidget) ProceedForm(form *multipart.Form, afo IAdminFilterObjec
 	return nil
 }
 
+type ArrayWidget struct {
+	TextareaWidget
+}
+
+func (w *ArrayWidget) GetWidgetType() WidgetType {
+	return ArrayWidgetType
+}
+
+func (w *ArrayWidget) GetTemplateName() string {
+	if w.TemplateName == "" {
+		path := "widgets/textarea"
+		if w.IsForAdmin {
+			path = "admin/" + path
+		}
+		return CurrentConfig.GetPathToTemplate(path)
+	}
+	return CurrentConfig.GetPathToTemplate(w.TemplateName)
+}
+
+func (w *ArrayWidget) Render(formRenderContext *FormRenderContext, currentField *Field) template.HTML {
+	// spew.Dump("11", w.FieldDisplayName)
+	data := w.GetDataForRendering(formRenderContext, currentField)
+	data["ShowOnlyHtmlInput"] = w.ShowOnlyHTMLInput
+	data["Type"] = w.GetWidgetType()
+	// spew.Dump("data debug", data, w.GetTemplateName())
+	return RenderWidget(formRenderContext, w.Renderer, w.GetTemplateName(), data, w.BaseFuncMap)
+}
+
+func (w *ArrayWidget) ProceedForm(form *multipart.Form, afo IAdminFilterObjects, renderContext *FormRenderContext) error {
+	if w.ReadOnly {
+		return nil
+	}
+	v, ok := form.Value[w.GetHTMLInputName()]
+	if !ok {
+		return fmt.Errorf("no field with name %s has been submitted", w.FieldDisplayName)
+	}
+	w.SetValue(v[0])
+	if w.Required && v[0] == "" {
+		return NewHTTPErrorResponse("field_required", "field %s is required", w.FieldDisplayName)
+	}
+	if renderContext.Field.FieldType.Name() == "StringArray" {
+		w.SetOutputValue(pq.StringArray(strings.Split(v[0], "\r\n")))
+	} else {
+		return NewHTTPErrorResponse("not_handled_type_of_array", "array of type %s not handled", renderContext.Field.FieldType.Name())
+	}
+
+	return nil
+}
+
+type JSONWidget struct {
+	TextareaWidget
+}
+
+func (w *JSONWidget) GetWidgetType() WidgetType {
+	return ArrayWidgetType
+}
+
+func (w *JSONWidget) GetTemplateName() string {
+	if w.TemplateName == "" {
+		path := "widgets/textarea"
+		if w.IsForAdmin {
+			path = "admin/" + path
+		}
+		return CurrentConfig.GetPathToTemplate(path)
+	}
+	return CurrentConfig.GetPathToTemplate(w.TemplateName)
+}
+
+func (w *JSONWidget) Render(formRenderContext *FormRenderContext, currentField *Field) template.HTML {
+	// spew.Dump("11", w.FieldDisplayName)
+	data := w.GetDataForRendering(formRenderContext, currentField)
+	data["ShowOnlyHtmlInput"] = w.ShowOnlyHTMLInput
+	data["Type"] = w.GetWidgetType()
+	return RenderWidget(formRenderContext, w.Renderer, w.GetTemplateName(), data, w.BaseFuncMap)
+}
+
+func (w *JSONWidget) ProceedForm(form *multipart.Form, afo IAdminFilterObjects, renderContext *FormRenderContext) error {
+	if w.ReadOnly {
+		return nil
+	}
+	v, ok := form.Value[w.GetHTMLInputName()]
+	if !ok {
+		return fmt.Errorf("no field with name %s has been submitted", w.FieldDisplayName)
+	}
+	w.SetValue(v[0])
+	if w.Required && v[0] == "" {
+		return NewHTTPErrorResponse("field_required", "field %s is required", w.FieldDisplayName)
+	}
+	w.SetOutputValue([]byte(v[0]))
+	return nil
+}
+
+
 type CheckboxWidget struct {
 	Widget
 }
@@ -1315,6 +1411,7 @@ func (w *ForeignKeyWidget) GetDataForRendering(formRenderContext *FormRenderCont
 		w.SetAttr("data-selected", TransformValueForListDisplay(value))
 	} else {
 		modelI, _ := w.GenerateModelInterface()
+
 		modelDescription := ProjectModels.GetModelFromInterface(modelI)
 		adminPage := CurrentDashboardAdminPanel.AdminPages.GetByModelName(modelDescription.Statement.Schema.Name)
 		autocompleteURL = adminPage.GenerateLinkForModelAutocompletion()
@@ -2910,6 +3007,10 @@ func GetWidgetFromFieldTypeAndGormField(fieldType GoMonolithFieldType, gormField
 	case "foreignkey":
 		// @todo, integrate autocomplate widget
 		widget = &TextWidget{}
+	case "array":
+		widget = &ArrayWidget{}
+	case "json":
+		widget = &JSONWidget{}
 	case "imagefield":
 		widget = &FileWidget{}
 		widget.SetAttr("accept", "image/*")

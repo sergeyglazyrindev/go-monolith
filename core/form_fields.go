@@ -48,6 +48,8 @@ const TextFieldType GoMonolithFieldType = "text"
 const TimeFieldType GoMonolithFieldType = "time"
 const URLFieldType GoMonolithFieldType = "url"
 const UUIDFieldType GoMonolithFieldType = "uuid"
+const JSONFieldType GoMonolithFieldType = "json"
+const ArrayFieldType GoMonolithFieldType = "array"
 
 type FieldConfig struct {
 	Widget                 IWidget

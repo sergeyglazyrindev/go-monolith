@@ -3,7 +3,6 @@ package core
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/davecgh/go-spew/spew"
 	"github.com/gin-gonic/gin"
 	"io"
 	"io/ioutil"
@@ -210,7 +209,7 @@ if __name__ == '__main__':
 			log.Fatal(err1)
 			return err1
 		}
-		spew.Dump("dsadasdas", file.Name())
+		// spew.Dump("dsadasdas", file.Name())
 	}
 	commandToExecute = exec.Command(
 		"swagger", "serve", "--flavor=swagger", "--no-open",

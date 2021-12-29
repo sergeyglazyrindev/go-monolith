@@ -24,6 +24,7 @@ func (flec *FormListEditableCollection) AddForInline(prefix string, ID string, f
 	if flec.InlineCollection[prefix] == nil {
 		flec.InlineCollection[prefix] = make(InlineFormListEditableCollection)
 	}
+	// spew.Dump("add inline collection for prefix", prefix)
 	flec.InlineCollection[prefix][ID] = formListEditable
 }
 
@@ -39,6 +40,20 @@ func (flec *FormListEditableCollection) GetForInlineNew(prefix string) <-chan *F
 			if !strings.Contains(modelID, "new") {
 				continue
 			}
+			chnl <- ret
+		}
+	}()
+	return chnl
+}
+
+func (flec *FormListEditableCollection) IterateForPrefix(prefix string) <-chan *FormListEditable {
+	chnl := make(chan *FormListEditable)
+	go func() {
+		defer close(chnl)
+		for _, ret := range flec.InlineCollection[prefix] {
+			//if strings.Contains(modelID, "new") {
+			//	continue
+			//}
 			chnl <- ret
 		}
 	}()
@@ -65,6 +80,7 @@ func (f *FormListEditable) SetPrefix(prefix string) {
 
 func (f *FormListEditable) ExistsField(ld *ListDisplay) bool {
 	_, err := f.FieldRegistry.GetByName(ld.Field.Name)
+	// spew.Dump("check if fields are present in list display form", ld.Field.Name, err, f.FieldRegistry.GetAllFields())
 	return err == nil
 }
 
@@ -75,6 +91,7 @@ func (f *FormListEditable) ProceedRequest(form *multipart.Form, gormModel interf
 	}
 	renderContext := &FormRenderContext{Context: adminContext, Model: gormModel}
 	for fieldName, field := range f.FieldRegistry.GetAllFields() {
+		renderContext.Field = field
 		errors1 := field.ProceedForm(form, nil, renderContext)
 		if len(errors1) == 0 {
 			continue
@@ -178,6 +195,7 @@ func NewFormListEditableFromListDisplayRegistry(adminContext IAdminContext, pref
 	for ld := range listDisplayRegistry.GetAllFields() {
 		if ld.IsEditable && ld.Field.Name != "ID" {
 			fieldFromNewForm, _ := modelForm.FieldRegistry.GetByName(ld.Field.Name)
+			// spew.Dump("ld field name", ld.DisplayName, ld.IsEditable, fieldFromNewForm.Field.Name)
 			name := fieldFromNewForm.FieldConfig.Widget.GetHTMLInputName()
 			if ret.Prefix != "" {
 				fieldFromNewForm.FieldConfig.Widget.SetPrefix(ret.Prefix)

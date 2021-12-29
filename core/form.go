@@ -13,6 +13,7 @@ import (
 type FormRenderContext struct {
 	Model   interface{}
 	Context IAdminContext
+	Field *Field
 }
 
 func NewFormRenderContext() *FormRenderContext {
@@ -222,6 +223,7 @@ func (f *Form) ProceedRequest(form *multipart.Form, gormModel interface{}, admin
 		if field.ReadOnly {
 			continue
 		}
+		renderContext.Field = field
 		errors := field.ProceedForm(form, afo, renderContext)
 		if len(errors) == 0 {
 			continue

@@ -22,6 +22,8 @@ type IAdminFilterObjects interface {
 	FilterByMultipleIds(field *Field, realObjectIds []string)
 	GetDB() IPersistenceStorage
 	GetLastError() error
+	ResetLastError()
+	SetLastError(err error)
 }
 
 type IterateAdminObjects struct {

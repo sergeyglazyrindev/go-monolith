@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"net/http"
+	"net/url"
 	"reflect"
 	"sort"
 	"strconv"
@@ -263,6 +264,22 @@ func (ap *AdminPage) FetchFilterOptions(ctx *gin.Context) []*DisplayFilterOption
 	return filterOptions
 }
 
+func GetURLToBackAfterSignin(ctx *gin.Context) string {
+	url1 := CurrentConfig.D.GoMonolith.RootAdminURL
+	urlNew := url.URL{}
+	urlNew.Path = url1
+	urlNew.Host = ctx.Request.URL.Host
+	urlNew.Scheme = ctx.Request.URL.Scheme
+	qs := urlNew.Query()
+	qs.Set("backto", ctx.Request.URL.String())
+	urlNew.RawQuery = qs.Encode()
+	return urlNew.String()
+}
+
+func (ap *AdminPage) GetURLToBackAfterSignin(ctx *gin.Context) string {
+	return GetURLToBackAfterSignin(ctx)
+}
+
 func NewAdminPageRegistry() *AdminPageRegistry {
 	return &AdminPageRegistry{
 		AdminPages: make(map[string]*AdminPage),
@@ -274,6 +291,9 @@ type AdminPageInlineRegistry struct {
 }
 
 func (apir *AdminPageInlineRegistry) Add(pageInline *AdminPageInline) {
+	if pageInline.Prefix == "" {
+		pageInline.Prefix = ASCIIRegex.ReplaceAllLiteralString(pageInline.VerboseName, "")
+	}
 	apir.Inlines = append(apir.Inlines, pageInline)
 }
 

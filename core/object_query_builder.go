@@ -49,6 +49,50 @@ func (ego *ExactGormOperator) Build(adapter IDbAdapter, context *GormOperatorCon
 	return context
 }
 
+type ArrayIncludesGormOperator struct {
+
+}
+
+func (ego *ArrayIncludesGormOperator) GetName() string {
+	return "arrayin"
+}
+
+func (ego *ArrayIncludesGormOperator) RegisterDbHandlers(registerDbHandler IRegisterDbHandler) error {
+	return nil
+}
+
+func (ego *ArrayIncludesGormOperator) TransformValue(value string) interface{} {
+	return value
+}
+
+func (ego *ArrayIncludesGormOperator) Build(adapter IDbAdapter, context *GormOperatorContext, field *Field, value interface{}, SQLConditionBuilder ISQLConditionBuilder) *GormOperatorContext {
+	value1 := TransformValueForOperator(value)
+	adapter.ArrayIncludes(context, field, value1, SQLConditionBuilder)
+	return context
+}
+
+type JSONIncludesGormOperator struct {
+
+}
+
+func (ego *JSONIncludesGormOperator) GetName() string {
+	return "jsoncontains"
+}
+
+func (ego *JSONIncludesGormOperator) RegisterDbHandlers(registerDbHandler IRegisterDbHandler) error {
+	return nil
+}
+
+func (ego *JSONIncludesGormOperator) TransformValue(value string) interface{} {
+	return value
+}
+
+func (ego *JSONIncludesGormOperator) Build(adapter IDbAdapter, context *GormOperatorContext, field *Field, value interface{}, SQLConditionBuilder ISQLConditionBuilder) *GormOperatorContext {
+	value1 := TransformValueForOperator(value)
+	adapter.JSONContains(context, field, value1, SQLConditionBuilder)
+	return context
+}
+
 type IExactGormOperator struct {
 }
 
@@ -632,6 +676,8 @@ func init() {
 	}
 	ProjectGormOperatorRegistry.RegisterOperator(&ExactGormOperator{})
 	ProjectGormOperatorRegistry.RegisterOperator(&IExactGormOperator{})
+	ProjectGormOperatorRegistry.RegisterOperator(&JSONIncludesGormOperator{})
+	ProjectGormOperatorRegistry.RegisterOperator(&ArrayIncludesGormOperator{})
 	ProjectGormOperatorRegistry.RegisterOperator(&ContainsGormOperator{})
 	ProjectGormOperatorRegistry.RegisterOperator(&IContainsGormOperator{})
 	ProjectGormOperatorRegistry.RegisterOperator(&InGormOperator{})

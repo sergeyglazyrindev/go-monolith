@@ -16,6 +16,13 @@
     <div class="col-sm-12 ">
         <div class="input-group col-sm-12">
 {{ end }}
+            {{ if .FormErrorNotEmpty }}
+            {{ range $error := .FormError }}
+            <div class="error-cont">
+                <span>{{ Translate $error }}</span>
+            </div>
+            {{ end }}
+            {{ end }}
             <textarea {{ if .ReadOnly }}readonly{{ end }} name="{{ .Name }}" {{ range $k, $v := .Attrs }} {{ attr $k }}="{{ safe $v }}"{{ end }}>{{ .Value }}</textarea>
 {{ if not .ShowOnlyHtmlInput }}
         </div>

@@ -109,7 +109,7 @@ func (b Blueprint) InitRouter(app core.IApp, group *gin.RouterGroup) {
 			}
 			if session.IsExpired() && c.Request.URL.Path != core.CurrentConfig.D.GoMonolith.RootAdminURL+"/" {
 				if !strings.Contains(c.Request.URL.Path, "resetpassword") {
-					c.Redirect(302, core.CurrentConfig.D.GoMonolith.RootAdminURL)
+					c.Redirect(302, core.GetURLToBackAfterSignin(c))
 					c.Abort()
 					return
 				}
@@ -117,7 +117,7 @@ func (b Blueprint) InitRouter(app core.IApp, group *gin.RouterGroup) {
 			user := session.GetUser()
 			if c.Request.URL.Path != core.CurrentConfig.D.GoMonolith.RootAdminURL+"/" && (user == nil || (!user.GetIsStaff() && !user.GetIsSuperUser())) {
 				if !strings.Contains(c.Request.URL.Path, "resetpassword") {
-					c.Redirect(302, core.CurrentConfig.D.GoMonolith.RootAdminURL)
+					c.Redirect(302, core.GetURLToBackAfterSignin(c))
 					c.Abort()
 					return
 				}

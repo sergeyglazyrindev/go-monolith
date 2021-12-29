@@ -543,6 +543,10 @@ func (gps *ElasticSearchPersistenceStorage) GetLastError() error {
 	return gps.LastError
 }
 
+func (gps *ElasticSearchPersistenceStorage) ResetLastError() {
+	gps.LastError = nil
+}
+
 func (gps *ElasticSearchPersistenceStorage) LoadDataForModelByID(modelI interface{}, ID string) IPersistenceStorage {
 	cond := elastic.NewTermQuery("_id", ID)
 	gps.First(modelI, cond)
@@ -571,9 +575,12 @@ type ElasticSearchAdminFilterObjects struct {
 	LastError           error
 }
 
+func (afo *ElasticSearchAdminFilterObjects) ResetLastError() {
+	afo.LastError = nil
+}
+
 func (afo *ElasticSearchAdminFilterObjects) GetLastError() error {
 	ret := afo.LastError
-	afo.LastError = nil
 	return ret
 }
 

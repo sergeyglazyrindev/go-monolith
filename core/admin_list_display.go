@@ -141,7 +141,7 @@ func (ld *ListDisplay) GetValue(m interface{}, forExportP ...bool) template.HTML
 		return template.HTML(ld.Populate(m))
 	}
 	if ld.Field.FieldConfig.Widget.GetPopulate() != nil {
-		return template.HTML(TransformValueForListDisplay(ld.Field.FieldConfig.Widget.GetPopulate()(ld.Field.FieldConfig.Widget, &FormRenderContext{Model: m}, ld.Field)))
+		return template.HTML(TransformValueForListDisplay(ld.Field.FieldConfig.Widget.GetPopulate()(ld.Field.FieldConfig.Widget, &FormRenderContext{Model: m, Field: ld.Field}, ld.Field)))
 	}
 	if ld.Field.FieldConfig.Widget.IsValueConfigured() {
 		return template.HTML(TransformValueForListDisplay(ld.Field.FieldConfig.Widget.GetValue()))

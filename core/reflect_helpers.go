@@ -2,6 +2,8 @@ package core
 
 import (
 	"fmt"
+	"github.com/lib/pq"
+	"gorm.io/datatypes"
 	"gorm.io/gorm"
 	"gorm.io/gorm/schema"
 	"reflect"
@@ -9,6 +11,7 @@ import (
 	"strings"
 	"time"
 )
+
 
 func SetUpStructField(structF reflect.Value, v interface{}) error {
 	switch structF.Kind() {
@@ -78,6 +81,12 @@ func SetUpStructField(structF reflect.Value, v interface{}) error {
 				structF.Set(v1)
 			}
 		}
+	case reflect.Slice:
+		switch structF.Type().Name() {
+		case "StringArray":
+			v := v.(pq.StringArray)
+			structF.Set(reflect.ValueOf(v))
+		}
 	}
 	return nil
 }
@@ -86,6 +95,12 @@ func GetGoMonolithFieldTypeFromGormField(gormField *schema.Field) GoMonolithFiel
 	var t GoMonolithFieldType
 	if gormField.PrimaryKey {
 		return PositiveIntegerFieldType
+	}
+	if gormField.DataType == "json" {
+		return JSONFieldType
+	}
+	if gormField.FieldType.Name() == "StringArray" {
+		return ArrayFieldType
 	}
 	switch gormField.FieldType.Kind() {
 	case reflect.Bool:
@@ -116,13 +131,9 @@ func GetGoMonolithFieldTypeFromGormField(gormField *schema.Field) GoMonolithFiel
 		t = FloatFieldType
 	case reflect.Float64:
 		t = FloatFieldType
+	case reflect.Slice:
+		t = ArrayFieldType
 	case reflect.Struct:
-		//s := gormField.
-		//switch s. {
-		//case time.Time:
-		//	return value.(time.Time)
-		//}
-		//
 	}
 	return t
 }
@@ -166,6 +177,9 @@ func TransformValueForWidget(value interface{}) interface{} {
 		typeString = r.Name()
 	}
 	if r.Kind() == reflect.Slice {
+		if r.Name() == "JSON" {
+			return string(value.([]byte))
+		}
 		newSlice := make([]string, 0)
 		s := reflect.ValueOf(value)
 		for i := 0; i < s.Len(); i++ {
@@ -199,6 +213,26 @@ func TransformValueForWidget(value interface{}) interface{} {
 			ct := value.(ContentType)
 			return (&ct).String()
 		}
+	} else if r.Kind() == reflect.Uint8 {
+		return strconv.FormatUint(uint64(value.(uint8)), 10)
+	} else if r.Kind() == reflect.Uint16 {
+		return strconv.FormatUint(uint64(value.(uint16)), 10)
+	} else if r.Kind() == reflect.Uint32 {
+		return strconv.FormatUint(uint64(value.(uint32)), 10)
+	} else if r.Kind() == reflect.Uint64 {
+		return strconv.FormatUint(value.(uint64), 10)
+	} else if r.Kind() == reflect.Int8 {
+		return strconv.FormatInt(int64(value.(int8)), 10)
+	} else if r.Kind() == reflect.Int16 {
+		return strconv.FormatInt(int64(value.(int16)), 10)
+	} else if r.Kind() == reflect.Int32 {
+		return strconv.FormatInt(int64(value.(int32)), 10)
+	} else if r.Kind() == reflect.Int64 {
+		return strconv.FormatInt(value.(int64), 10)
+	} else if r.Kind() == reflect.Float32 {
+		return strconv.FormatFloat(float64(value.(float32)), 'E', -1, 32)
+	} else if r.Kind() == reflect.Float64 {
+		return strconv.FormatFloat(value.(float64), 'E', -1, 64)
 	} else if typeString == "string" {
 		return value
 	} else if typeString == "int" {
@@ -274,6 +308,9 @@ func TransformValueForOperator(value interface{}) interface{} {
 		typeString = r.Name()
 	}
 	if r.Kind() == reflect.Slice {
+		if r.Name() == "JSON" {
+			return string(value.([]byte))
+		}
 		newSlice := make([]string, 0)
 		s := reflect.ValueOf(value)
 		for i := 0; i < s.Len(); i++ {
@@ -333,6 +370,9 @@ func TransformValueForListDisplay(value interface{}, forExportP ...bool) string 
 		typeString = r.Name()
 	}
 	if r.Kind() == reflect.Slice {
+		if r.Name() == "JSON" {
+			return string(value.(datatypes.JSON))
+		}
 		newSlice := make([]string, 0)
 		s := reflect.ValueOf(value)
 		for i := 0; i < s.Len(); i++ {
@@ -367,6 +407,26 @@ func TransformValueForListDisplay(value interface{}, forExportP ...bool) string 
 		case time.Time:
 			return value.(*time.Time).String()
 		}
+	} else if r.Kind() == reflect.Uint8 {
+		return strconv.FormatUint(uint64(value.(uint8)), 10)
+	} else if r.Kind() == reflect.Uint16 {
+		return strconv.FormatUint(uint64(value.(uint16)), 10)
+	} else if r.Kind() == reflect.Uint32 {
+		return strconv.FormatUint(uint64(value.(uint32)), 10)
+	} else if r.Kind() == reflect.Uint64 {
+		return strconv.FormatUint(value.(uint64), 10)
+	} else if r.Kind() == reflect.Int8 {
+		return strconv.FormatInt(int64(value.(int8)), 10)
+	} else if r.Kind() == reflect.Int16 {
+		return strconv.FormatInt(int64(value.(int16)), 10)
+	} else if r.Kind() == reflect.Int32 {
+		return strconv.FormatInt(int64(value.(int32)), 10)
+	} else if r.Kind() == reflect.Int64 {
+		return strconv.FormatInt(value.(int64), 10)
+	} else if r.Kind() == reflect.Float32 {
+		return strconv.FormatFloat(float64(value.(float32)), 'E', -1, 32)
+	} else if r.Kind() == reflect.Float64 {
+		return strconv.FormatFloat(value.(float64), 'E', -1, 64)
 	} else if typeString == "string" {
 		return value.(string)
 	} else if typeString == "int64" {
