@@ -116,11 +116,11 @@ func (m {{.MigrationName}}) GetID() int64 {
     return {{.ConcreteMigrationID}}
 }
 
-func (m {{.MigrationName}}) Up(database *core.Database) error {
+func (m {{.MigrationName}}) Up(database *core.ProjectDatabase) error {
     return nil
 }
 
-func (m {{.MigrationName}}) Down(database *core.Database) error {
+func (m {{.MigrationName}}) Down(database *core.ProjectDatabase) error {
     return nil
 }
 
