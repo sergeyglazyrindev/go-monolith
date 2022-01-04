@@ -11,6 +11,7 @@ type IUser interface {
 	GetUpdatedAt() time.Time
 	GetDeletedAt() gorm.DeletedAt
 	GetUsername() string
+	GetAccountIdentifier() string
 	GetFirstName() string
 	GetLastName() string
 	GetPassword() string

@@ -6,7 +6,6 @@ import (
 	"github.com/sergeyglazyrindev/go-monolith/blueprint/auth"
 	interfaces3 "github.com/sergeyglazyrindev/go-monolith/blueprint/auth/interfaces"
 	"github.com/sergeyglazyrindev/go-monolith/core"
-	"github.com/sergeyglazyrindev/go-monolith/utils"
 	"github.com/stretchr/testify/suite"
 	"gorm.io/gorm"
 	"net/http"
@@ -81,6 +80,9 @@ func endStats(s *suite.SuiteInformation, testName string, passed bool) {
 }
 
 func RunTests(t *testing.T, currentsuite suite.TestingSuite) {
+	core.ProjectEmailSenderFactory.MakeEmailSender = func() core.IEmailSender {
+		return core.TestEmailSender
+	}
 	defer failOnPanic(t)
 
 	currentsuite.SetT(t)
@@ -144,7 +146,7 @@ func RunTests(t *testing.T, currentsuite suite.TestingSuite) {
 					currentsuite.SetT(parentT)
 				}()
 
-				utils.SentEmailsDuringTests.ClearTestEmails()
+				core.TestEmailSender.ClearTestEmails()
 				config := core.NewConfig("configs/" + os.Getenv("TEST_ENVIRONMENT") + ".yml")
 				core.CurrentConfig = config
 				core.CurrentConfig.InTests = true

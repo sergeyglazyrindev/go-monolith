@@ -8,7 +8,6 @@ import (
 	"github.com/sergeyglazyrindev/go-monolith/blueprint/otp/services"
 	sessionsblueprint "github.com/sergeyglazyrindev/go-monolith/blueprint/sessions"
 	"github.com/sergeyglazyrindev/go-monolith/core"
-	"github.com/sergeyglazyrindev/go-monolith/utils"
 	"github.com/stretchr/testify/assert"
 	"net/http"
 	"net/http/httptest"
@@ -291,7 +290,7 @@ func (s *AuthProviderTestSuite) TestForgotFunctionality() {
 		tokenmasked := core.MaskCSRFToken(token)
 		req1.Header.Set("CSRF-TOKEN", tokenmasked)
 		gomonolith.TestHTTPResponse(s.T(), s.App, req1, func(w *httptest.ResponseRecorder) bool {
-			isSentEmail := utils.SentEmailsDuringTests.IsAnyEmailSentWithStringInBodyOrSubject(&utils.SentEmail{
+			isSentEmail := core.TestEmailSender.IsAnyEmailSentWithStringInBodyOrSubject(&core.SentEmail{
 				Subject: "Password reset for admin panel",
 			})
 			var oneTimeAction core.OneTimeAction

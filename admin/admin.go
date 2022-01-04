@@ -74,7 +74,7 @@ func init() {
 			user := session.GetUser()
 			if user != nil {
 				context.SetUserObject(user)
-				context.SetUser(user.GetUsername())
+				context.SetUser(user.GetAccountIdentifier())
 				context.SetUserExists(true)
 				context.SetUserPermissionRegistry(user.BuildPermissionRegistry())
 			}

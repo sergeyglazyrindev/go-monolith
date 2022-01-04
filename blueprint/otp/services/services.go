@@ -62,7 +62,7 @@ func GenerateOTPSeed(digits int, algorithm string, skew uint, period uint, user 
 	algo := getOTPAlgorithm(strings.ToLower(algorithm))
 
 	opts := totp.GenerateOpts{
-		AccountName: user.GetUsername(),
+		AccountName: user.GetAccountIdentifier(),
 		Issuer:      core.CurrentConfig.D.GoMonolith.SiteName,
 		Algorithm:   algo,
 		Digits:      otp.Digits(digits),

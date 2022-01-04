@@ -127,7 +127,8 @@ func RenderHTML(ctx *gin.Context, path string, data interface{}, baseFuncMap tem
 	//}
 	templateNameParts := strings.Split(path, "/")
 	templateContent := CurrentConfig.GetTemplateContent(path)
-	newT, err := template.New(templateNameParts[len(templateNameParts)-1]).Funcs(funcs1).Parse(
+	templateIdentifier := strings.Join(templateNameParts, "-")
+	newT, err := template.New(templateIdentifier).Funcs(funcs1).Parse(
 		string(templateContent),
 	)
 	if err != nil {
@@ -205,7 +206,8 @@ func RenderHTMLAsString(writer *bytes.Buffer, path string, data interface{}, bas
 	//}
 	templateNameParts := strings.Split(path, "/")
 	templateContent := CurrentConfig.GetTemplateContent(path)
-	newT, err := template.New(templateNameParts[len(templateNameParts)-1]).Funcs(funcs1).Parse(
+	templateIdentifier := strings.Join(templateNameParts, "-")
+	newT, err := template.New(templateIdentifier).Funcs(funcs1).Parse(
 		string(templateContent),
 	)
 	if err != nil {

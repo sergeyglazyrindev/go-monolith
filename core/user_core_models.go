@@ -52,6 +52,13 @@ func (u *User) GetUsername() string {
 	return u.Username
 }
 
+func (u *User) GetAccountIdentifier() string {
+	if u.Username != "" {
+		return u.Username
+	}
+	return u.Email
+}
+
 func (u *User) GetFirstName() string {
 	return u.FirstName
 }

@@ -6,7 +6,6 @@ package interfaces
 */
 import (
 	"fmt"
-	"github.com/sergeyglazyrindev/go-monolith/blueprint/auth/services"
 	"github.com/sergeyglazyrindev/go-monolith/core"
 )
 
@@ -46,7 +45,7 @@ func NewSessionRegistry() *SessionProviderRegistry {
 }
 
 func NewSession() *core.Session {
-	key := services.GenerateBase64(24)
+	key := core.GenerateBase64(24)
 	return &core.Session{
 		Key:  key,
 		Data: "{}",

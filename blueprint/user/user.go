@@ -9,7 +9,6 @@ import (
 	sessionsblueprint "github.com/sergeyglazyrindev/go-monolith/blueprint/sessions"
 	"github.com/sergeyglazyrindev/go-monolith/blueprint/user/migrations"
 	"github.com/sergeyglazyrindev/go-monolith/core"
-	"github.com/sergeyglazyrindev/go-monolith/utils"
 	"html/template"
 	"net/http"
 	"reflect"
@@ -88,7 +87,7 @@ func (b Blueprint) InitRouter(app core.IApp, group *gin.RouterGroup) {
 		}
 
 		c := Context{}
-		c.Name = user.GetUsername()
+		c.Name = user.GetFullName()
 		c.Website = core.CurrentConfig.D.GoMonolith.SiteName
 		host := core.CurrentConfig.D.GoMonolith.PoweredOnSite
 		// @todo, generate code to restore access
@@ -111,7 +110,13 @@ func (b Blueprint) InitRouter(app core.IApp, group *gin.RouterGroup) {
 			return
 		}
 		subject := "Password reset for admin panel on the " + core.CurrentConfig.D.GoMonolith.SiteName
-		err = utils.SendEmail(core.CurrentConfig.D.GoMonolith.EmailFrom, []string{user.GetEmail()}, []string{}, []string{}, subject, templateWriter.String())
+		emailSender := core.ProjectEmailSenderFactory.MakeEmailSender()
+		emailSender.SetFrom(core.CurrentConfig.D.GoMonolith.EmailFrom)
+		emailSender.AddRecipient(user.GetEmail())
+		emailSender.SetSubject(subject)
+		emailSender.SetBody(templateWriter.String())
+		err = emailSender.SendEmail()
+
 		if err != nil {
 			ctx.JSON(http.StatusBadRequest, core.APIBadResponse(err.Error()))
 		}
@@ -281,7 +286,11 @@ func (b Blueprint) InitRouter(app core.IApp, group *gin.RouterGroup) {
 		usersAdminPage,
 		&core.User{},
 		func(modelI interface{}, ctx core.IAdminContext) *core.Form {
-			fields := []string{"Username", "FirstName", "LastName", "Email", "Active", "IsStaff", "IsSuperUser", "Password", "Photo", "LastLogin", "ExpiresOn"}
+			firstField := "Username"
+			if core.CurrentConfig.D.GoMonolith.DirectAPISigninByField == "email" {
+				firstField = "Email"
+			}
+			fields := []string{firstField, "FirstName", "LastName", "Email", "Active", "IsStaff", "IsSuperUser", "Password", "Photo", "LastLogin", "ExpiresOn"}
 			if ctx.GetUserObject().GetIsSuperUser() {
 				fields = append(fields, "UserGroups")
 				fields = append(fields, "Permissions")
