@@ -2,7 +2,7 @@ package core
 
 import "github.com/pilagod/gorm-cursor-paginator/v2/paginator"
 
-type PaginatedResponse struct {
+type GORMPaginatedResponse struct {
 	Count        int64
 	NextLink     string
 	PrevLink     string
