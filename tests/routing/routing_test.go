@@ -3,6 +3,7 @@ package routing
 import (
 	"github.com/sergeyglazyrindev/go-monolith"
 	"github.com/sergeyglazyrindev/go-monolith/core"
+	"github.com/stretchr/testify/assert"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -42,6 +43,14 @@ func (suite *ConcreteTestSuite) TestPingEndpoint() {
 	})
 	req1, _ := http.NewRequest("GET", "/static-inbuilt/go-monolith/assets/moment.js", nil)
 	gomonolith.TestHTTPResponse(suite.T(), suite.App, req1, func(w *httptest.ResponseRecorder) bool {
+		return w.Code == 200
+	})
+}
+
+func (suite *ConcreteTestSuite) TestStaticFile() {
+	req, _ := http.NewRequest("GET", "/static-inbuilt/go-monolith/favicon.ico", nil)
+	gomonolith.TestHTTPResponse(suite.T(), suite.App, req, func(w *httptest.ResponseRecorder) bool {
+		assert.Equal(suite.T(), w.Code, 200)
 		return w.Code == 200
 	})
 }

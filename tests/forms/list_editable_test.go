@@ -26,7 +26,7 @@ func (s *ListEditableFormTestSuite) TestFormBuilder() {
 	userAdminPage, _ := adminPanel.SubPages.GetBySlug("user")
 	ld, _ := userAdminPage.ListDisplay.GetFieldByDisplayName("Email")
 	ld.IsEditable = true
-	listEditableForm := core.NewFormListEditableFromListDisplayRegistry(nil, "", "10", core.GenerateUserModel(), userAdminPage.ListDisplay, nil)
+	listEditableForm := core.NewFormListEditableFromListDisplayRegistry(nil, "", "10", core.MakeUser(), userAdminPage.ListDisplay, nil)
 	form := NewTestForm1()
 	userTest := &core.User{}
 	err := listEditableForm.ProceedRequest(form, userTest, &core.AdminContext{})

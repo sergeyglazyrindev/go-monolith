@@ -24,6 +24,7 @@ gomonolith.db
 # Dependency directories (remove the comment below to include it)
 # vendor/
 *.cover
+tests/blueprint/auth/*/media/*
 tests/blueprint/auth/media/*
 uploads/*
 lint.json

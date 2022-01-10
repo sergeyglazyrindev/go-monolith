@@ -13,7 +13,7 @@ type AdminListDisplayTestSuite struct {
 }
 
 func (suite *AdminListDisplayTestSuite) TestListDisplay() {
-	userModel := core.GenerateUserModel()
+	userModel := core.MakeUser()
 	userModel.SetUsername("admin")
 	userModel.SetFirstName("firstname")
 	userModel.SetLastName("lastname")

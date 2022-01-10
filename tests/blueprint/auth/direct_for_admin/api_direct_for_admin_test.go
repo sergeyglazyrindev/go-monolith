@@ -1,4 +1,4 @@
-package auth
+package direct_for_admin
 
 import (
 	"bytes"
@@ -17,11 +17,11 @@ import (
 	"time"
 )
 
-type AuthProviderTestSuite struct {
+type DirectForAdminAuthProviderTestSuite struct {
 	gomonolith.TestSuite
 }
 
-func (s *AuthProviderTestSuite) TestDirectAuthProviderForGoMonolithAdmin() {
+func (s *DirectForAdminAuthProviderTestSuite) TestDirectAuthProviderForGoMonolithAdmin() {
 	req, _ := http.NewRequest("GET", "/auth/direct-for-admin/status/", nil)
 	gomonolith.TestHTTPResponse(s.T(), s.App, req, func(w *httptest.ResponseRecorder) bool {
 		assert.Contains(s.T(), w.Body.String(), "http: named cookie not present")
@@ -134,7 +134,7 @@ func (s *AuthProviderTestSuite) TestDirectAuthProviderForGoMonolithAdmin() {
 	})
 }
 
-func (s *AuthProviderTestSuite) TestSignupForGoMonolithAdmin() {
+func (s *DirectForAdminAuthProviderTestSuite) TestSignupForGoMonolithAdmin() {
 	// hashedPassword, err := utils2.HashPass(password, salt)
 	var jsonStr = []byte(`{"username":"test", "confirm_password": "12345678", "password": "12345678", "email": "go-monolithapitest@example.com"}`)
 	req, _ := http.NewRequest("POST", "/auth/direct-for-admin/signup/", bytes.NewBuffer(jsonStr))
@@ -145,104 +145,7 @@ func (s *AuthProviderTestSuite) TestSignupForGoMonolithAdmin() {
 	})
 }
 
-func (s *AuthProviderTestSuite) TestSignupForApi() {
-	// hashedPassword, err := utils2.HashPass(password, salt)
-	var jsonStr = []byte(`{"username":"test", "confirm_password": "12345678", "password": "12345678", "email": "go-monolithapitest@example.com"}`)
-	req, _ := http.NewRequest("POST", "/auth/direct/signup/", bytes.NewBuffer(jsonStr))
-	req.Header.Set("Content-Type", "application/json")
-	gomonolith.TestHTTPResponse(s.T(), s.App, req, func(w *httptest.ResponseRecorder) bool {
-		assert.Equal(s.T(), w.Code, 200)
-		return w.Code == 200
-	})
-}
-
-func (s *AuthProviderTestSuite) TestTokenAuthProviderForApi() {
-	var jsonStr = []byte(`{"signinfield":"test", "password": "123456"}`)
-	req, _ := http.NewRequest("POST", "/auth/token/signin/", bytes.NewBuffer(jsonStr))
-	req.Header.Set("Content-Type", "application/json")
-	gomonolith.TestHTTPResponse(s.T(), s.App, req, func(w *httptest.ResponseRecorder) bool {
-		assert.Contains(s.T(), w.Body.String(), "login credentials are incorrect")
-		return strings.Contains(w.Body.String(), "login credentials are incorrect")
-	})
-	salt := core.GenerateRandomString(core.CurrentConfig.D.Auth.SaltLength)
-	// hashedPassword, err := utils2.HashPass(password, salt)
-	hashedPassword, _ := utils2.HashPass("123456", salt)
-	user := core.User{
-		FirstName:        "testuser-firstname",
-		LastName:         "testuser-lastname",
-		Username:         "test",
-		Password:         hashedPassword,
-		Active:           false,
-		Salt:             salt,
-		IsPasswordUsable: true,
-	}
-	db := s.Database.Db
-	db.Create(&user)
-	req, _ = http.NewRequest("POST", "/auth/token/signin/", bytes.NewBuffer(jsonStr))
-	req.Header.Set("Content-Type", "application/json")
-	gomonolith.TestHTTPResponse(s.T(), s.App, req, func(w *httptest.ResponseRecorder) bool {
-		assert.Contains(s.T(), w.Body.String(), "this user is inactive")
-		return strings.Contains(w.Body.String(), "this user is inactive")
-	})
-	user.Active = true
-	secretString, _ := services.GenerateOTPSeed(core.CurrentConfig.D.GoMonolith.OTPDigits, core.CurrentConfig.D.GoMonolith.OTPAlgorithm, core.CurrentConfig.D.GoMonolith.OTPSkew, core.CurrentConfig.D.GoMonolith.OTPPeriod, &user)
-	user.OTPSeed = secretString
-	otpPassword := services.GetOTP(user.OTPSeed, core.CurrentConfig.D.GoMonolith.OTPDigits, core.CurrentConfig.D.GoMonolith.OTPAlgorithm, core.CurrentConfig.D.GoMonolith.OTPSkew, core.CurrentConfig.D.GoMonolith.OTPPeriod)
-	user.GeneratedOTPToVerify = otpPassword
-	var jsonStrForSignup = []byte(fmt.Sprintf(`{"signinfield":"test", "password": "123456", "otp": "%s"}`, otpPassword))
-	db.Save(&user)
-	req, _ = http.NewRequest("POST", "/auth/token/signin/", bytes.NewBuffer(jsonStrForSignup))
-	req.Header.Set("Content-Type", "application/json")
-	gomonolith.TestHTTPResponse(s.T(), s.App, req, func(w *httptest.ResponseRecorder) bool {
-		assert.Equal(s.T(), w.Code, 200)
-		return w.Code == 200
-	})
-}
-
-func (s *AuthProviderTestSuite) TestTokenWithExpirationAuthProviderForApi() {
-	var jsonStr = []byte(`{"signinfield":"test", "password": "123456"}`)
-	req, _ := http.NewRequest("POST", "/auth/token-with-expiration/signin/", bytes.NewBuffer(jsonStr))
-	req.Header.Set("Content-Type", "application/json")
-	gomonolith.TestHTTPResponse(s.T(), s.App, req, func(w *httptest.ResponseRecorder) bool {
-		assert.Contains(s.T(), w.Body.String(), "login credentials are incorrect")
-		return strings.Contains(w.Body.String(), "login credentials are incorrect")
-	})
-	salt := core.GenerateRandomString(core.CurrentConfig.D.Auth.SaltLength)
-	// hashedPassword, err := utils2.HashPass(password, salt)
-	hashedPassword, _ := utils2.HashPass("123456", salt)
-	user := core.User{
-		FirstName:        "testuser-firstname",
-		LastName:         "testuser-lastname",
-		Username:         "test",
-		Password:         hashedPassword,
-		Active:           false,
-		Salt:             salt,
-		IsPasswordUsable: true,
-	}
-	db := s.Database.Db
-	db.Create(&user)
-	req, _ = http.NewRequest("POST", "/auth/token-with-expiration/signin/", bytes.NewBuffer(jsonStr))
-	req.Header.Set("Content-Type", "application/json")
-	gomonolith.TestHTTPResponse(s.T(), s.App, req, func(w *httptest.ResponseRecorder) bool {
-		assert.Contains(s.T(), w.Body.String(), "this user is inactive")
-		return strings.Contains(w.Body.String(), "this user is inactive")
-	})
-	user.Active = true
-	secretString, _ := services.GenerateOTPSeed(core.CurrentConfig.D.GoMonolith.OTPDigits, core.CurrentConfig.D.GoMonolith.OTPAlgorithm, core.CurrentConfig.D.GoMonolith.OTPSkew, core.CurrentConfig.D.GoMonolith.OTPPeriod, &user)
-	user.OTPSeed = secretString
-	otpPassword := services.GetOTP(user.OTPSeed, core.CurrentConfig.D.GoMonolith.OTPDigits, core.CurrentConfig.D.GoMonolith.OTPAlgorithm, core.CurrentConfig.D.GoMonolith.OTPSkew, core.CurrentConfig.D.GoMonolith.OTPPeriod)
-	user.GeneratedOTPToVerify = otpPassword
-	var jsonStrForSignup = []byte(fmt.Sprintf(`{"signinfield":"test", "password": "123456", "otp": "%s"}`, otpPassword))
-	db.Save(&user)
-	req, _ = http.NewRequest("POST", "/auth/token-with-expiration/signin/", bytes.NewBuffer(jsonStrForSignup))
-	req.Header.Set("Content-Type", "application/json")
-	gomonolith.TestHTTPResponse(s.T(), s.App, req, func(w *httptest.ResponseRecorder) bool {
-		assert.Equal(s.T(), w.Code, 200)
-		return w.Code == 200
-	})
-}
-
-func (s *AuthProviderTestSuite) TestOpenAdminPage() {
+func (s *DirectForAdminAuthProviderTestSuite) TestOpenAdminPage() {
 	req, _ := http.NewRequest("GET", core.CurrentConfig.D.GoMonolith.RootAdminURL+"/", nil)
 	gomonolith.TestHTTPResponse(s.T(), s.App, req, func(w *httptest.ResponseRecorder) bool {
 		assert.Contains(s.T(), w.Body.String(), "Go-Monolith - Admin Login")
@@ -265,11 +168,27 @@ func (s *AuthProviderTestSuite) TestOpenAdminPage() {
 			assert.Equal(s.T(), w.Code, 200)
 			return strings.Contains(w.Body.String(), "Go-Monolith - Dashboard")
 		})
+		req1, _ = http.NewRequest("POST", "/auth/direct-for-admin/logout/", nil)
+		req1.Header.Set(
+			"Cookie",
+			fmt.Sprintf("%s=%s", core.CurrentConfig.D.GoMonolith.AdminCookieName, sessionKey),
+		)
+		session, _ := sessionsblueprint.ConcreteBlueprint.SessionAdapterRegistry.GetDefaultAdapter()
+		session, _ = session.GetByKey(sessionKey)
+		token := core.GenerateCSRFToken()
+		session.Set("csrf_token", token)
+		session.Save()
+		tokenmasked := core.MaskCSRFToken(token)
+		req1.Header.Set("CSRF-TOKEN", tokenmasked)
+		gomonolith.TestHTTPResponse(s.T(), s.App, req1, func(w *httptest.ResponseRecorder) bool {
+			assert.Equal(s.T(), w.Code, 204)
+			return w.Code == 204
+		})
 		return strings.Contains(w.Header().Get("Set-Cookie"), "go-monolith-admin=")
 	})
 }
 
-func (s *AuthProviderTestSuite) TestForgotFunctionality() {
+func (s *DirectForAdminAuthProviderTestSuite) TestForgotFunctionality() {
 	var jsonStr = []byte(`{"username":"test", "confirm_password": "12345678", "password": "12345678", "email": "go-monolithapitest@example.com"}`)
 	req, _ := http.NewRequest("POST", "/auth/direct-for-admin/signup/", bytes.NewBuffer(jsonStr))
 	req.Header.Set("Content-Type", "application/json")
@@ -321,6 +240,6 @@ func (s *AuthProviderTestSuite) TestForgotFunctionality() {
 
 // In order for 'go test' to run this suite, we need to create
 // a normal test function and pass our suite to suite.Run
-func TestAuthAdapters(t *testing.T) {
-	gomonolith.RunTests(t, new(AuthProviderTestSuite))
+func TestDirectForAdminAuthAdapter(t *testing.T) {
+	gomonolith.RunTests(t, new(DirectForAdminAuthProviderTestSuite))
 }

@@ -49,7 +49,7 @@ func (ap *DirectAuthForAdminProvider) Signin(c *gin.Context) {
 	database := core.NewDatabaseInstance()
 	defer database.Close()
 	db := database.Db
-	var user = core.GenerateUserModel()
+	var user = core.MakeUser()
 	directAPISigninByField := core.CurrentConfig.D.GoMonolith.DirectAPISigninByField
 	db.Model(core.User{}).Where(fmt.Sprintf("%s = ?", directAPISigninByField), json.SigninField).First(&user)
 	if user.GetID() == 0 {

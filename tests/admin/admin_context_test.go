@@ -22,7 +22,7 @@ func (suite *AdminPopulateContextModelActionTestSuite) TestPopulateContext() {
 	ctx.Request, _ = http.NewRequest("GET", "/", nil)
 	sessionAdapter, _ := sessionsblueprint.ConcreteBlueprint.SessionAdapterRegistry.GetDefaultAdapter()
 	session := sessionAdapter.Create()
-	user := core.GenerateUserModel()
+	user := core.MakeUser()
 	user.SetFirstName("testadmincontext")
 	user.SetLastName("testadmincontext")
 	user.SetUsername("testadmincontext")

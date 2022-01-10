@@ -72,6 +72,7 @@ type ConfigOptions struct {
 	TimeFormat             string `yaml:"time_format"`
 	DateFormatOrder        string `yaml:"date_format_order"`
 	AdminPerPage           int    `yaml:"admin_per_page"`
+	APIToken			string `yaml:"api_token"`
 }
 
 type DbOptions struct {
@@ -255,6 +256,7 @@ func (ucc *ConfigurableConfig) UnmarshalYAML(unmarshal func(interface{}) error) 
 			UploadPath:             "uploads",
 			DateFormatOrder:        "mm/dd/yyyy",
 			AdminPerPage:           10,
+			APIToken: "API-TOKEN",
 		},
 	}
 	// Put your defaults here

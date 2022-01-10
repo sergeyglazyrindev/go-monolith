@@ -14,7 +14,7 @@ type AdminSearchFieldTestSuite struct {
 
 func (suite *AdminSearchFieldTestSuite) SetupTestData() {
 	for i := range core.GenerateNumberSequence(201, 300) {
-		userModel := core.GenerateUserModel()
+		userModel := core.MakeUser()
 		userModel.SetEmail(fmt.Sprintf("admin_%d@example.com", i))
 		userModel.SetUsername("admin_" + strconv.Itoa(i))
 		userModel.SetFirstName("firstname_" + strconv.Itoa(i))

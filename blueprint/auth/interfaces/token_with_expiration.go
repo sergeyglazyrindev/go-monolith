@@ -6,6 +6,7 @@ import (
 	"github.com/asaskevich/govalidator"
 	"github.com/gin-gonic/gin"
 	utils2 "github.com/sergeyglazyrindev/go-monolith/blueprint/auth/utils"
+	sessionsblueprint "github.com/sergeyglazyrindev/go-monolith/blueprint/sessions"
 	user2 "github.com/sergeyglazyrindev/go-monolith/blueprint/user"
 	"github.com/sergeyglazyrindev/go-monolith/core"
 	"golang.org/x/crypto/bcrypt"
@@ -170,11 +171,46 @@ func (ap *TokenWithExpirationAuthProvider) Logout(c *gin.Context) {
 }
 
 func (ap *TokenWithExpirationAuthProvider) IsAuthenticated(c *gin.Context) {
-	c.Status(http.StatusNoContent)
+	token := c.GetHeader("X-" + core.CurrentConfig.D.GoMonolith.APIToken)
+	if token == "" {
+		c.JSON(http.StatusBadRequest, core.APIBadResponse("no token header passed"))
+		return
+	}
+	db := core.NewDatabaseInstance()
+	defer db.Close()
+	tokenFromDb := &core.UserAuthToken{}
+	db.Db.Model(tokenFromDb).Preload("User").Where(&core.UserAuthToken{Token: token}).First(tokenFromDb)
+	if tokenFromDb.ID == 0 {
+		c.JSON(http.StatusBadRequest, core.APIBadResponse("wrong token passed"))
+		return
+	}
+	if tokenFromDb.IsExpired() {
+		c.JSON(http.StatusBadRequest, core.APIBadResponse("token expired"))
+		return
+	}
+	c.JSON(http.StatusOK, getUserForGoMonolithPanel(&tokenFromDb.User))
 }
 
 func (ap *TokenWithExpirationAuthProvider) GetSession(c *gin.Context) core.ISessionProvider {
-	return nil
+	var cookieName string
+	cookieName = core.CurrentConfig.D.GoMonolith.APICookieName
+	cookie, err := c.Cookie(cookieName)
+	if err != nil {
+		return nil
+	}
+	if cookie == "" {
+		return nil
+	}
+	sessionAdapterRegistry := sessionsblueprint.ConcreteBlueprint.SessionAdapterRegistry
+	sessionAdapter, _ := sessionAdapterRegistry.GetDefaultAdapter()
+	sessionAdapter, err = sessionAdapter.GetByKey(cookie)
+	if err != nil {
+		return nil
+	}
+	if sessionAdapter.IsExpired() {
+		return nil
+	}
+	return sessionAdapter
 }
 
 func (ap *TokenWithExpirationAuthProvider) GetName() string {

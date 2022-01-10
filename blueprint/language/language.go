@@ -53,6 +53,7 @@ func (b Blueprint) InitRouter(app core.IApp, group *gin.RouterGroup) {
 			return form
 		},
 	)
+	languagemodelAdminPage.NoPermissionToAddNew = true
 	languagemodelAdminPage.PageName = "Languages"
 	languagemodelAdminPage.Slug = "language"
 	languagemodelAdminPage.BlueprintName = "language"

@@ -57,7 +57,7 @@ type IUser interface {
 	BuildPermissionRegistry() *UserPermRegistry
 }
 
-var GenerateUserModel = func() IUser {
+var MakeUser = func() IUser {
 	return &User{}
 }
 

@@ -5,11 +5,13 @@ import (
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/sergeyglazyrindev/go-monolith"
+	sessionsblueprint "github.com/sergeyglazyrindev/go-monolith/blueprint/sessions"
 	"github.com/sergeyglazyrindev/go-monolith/core"
 	"github.com/stretchr/testify/assert"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"time"
 )
 
 type AdminModelActionTestSuite struct {
@@ -17,7 +19,7 @@ type AdminModelActionTestSuite struct {
 }
 
 func (suite *AdminModelActionTestSuite) TestAdminModelAction() {
-	userModel := core.GenerateUserModel()
+	userModel := core.MakeUser()
 	userModel.SetUsername("adminmodelactiontest")
 	userModel.SetFirstName("firstname")
 	userModel.SetLastName("lastname")
@@ -37,6 +39,20 @@ func (suite *AdminModelActionTestSuite) TestAdminModelAction() {
 	var jsonStr = []byte(fmt.Sprintf(`{"object_ids": "%d"}`, userModel.GetID()))
 	req, _ := http.NewRequest("POST", "/admin/users/user/turnsuperuserstonormalusers/", bytes.NewBuffer(jsonStr))
 	req.Header.Set("Content-Type", "application/json")
+	sessionsblueprint1, _ := suite.App.BlueprintRegistry.GetByName("sessions")
+	sessionAdapterRegistry := sessionsblueprint1.(sessionsblueprint.Blueprint).SessionAdapterRegistry
+	defaultAdapter, _ := sessionAdapterRegistry.GetDefaultAdapter()
+	defaultAdapter = defaultAdapter.Create()
+	expiresOn := time.Now().UTC().Add(5 * time.Minute)
+	defaultAdapter.ExpiresOn(&expiresOn)
+	defaultAdapter.Save()
+	defaultAdapter.SetUser(userModel)
+	defaultAdapter.Save()
+	// directProvider.
+	req.Header.Set(
+		"Cookie",
+		fmt.Sprintf("%s=%s", core.CurrentConfig.D.GoMonolith.AdminCookieName, defaultAdapter.GetKey()),
+	)
 	for adminModelAction := range adminUserPage.ModelActionsRegistry.GetAllModelActions() {
 		if adminModelAction.SlugifiedActionName != "turnsuperuserstonormalusers" {
 			continue
@@ -49,7 +65,7 @@ func (suite *AdminModelActionTestSuite) TestAdminModelAction() {
 
 	}
 	adminContext := &core.AdminContext{}
-	userForm := core.NewFormFromModelFromGinContext(adminContext, core.GenerateUserModel(), make([]string, 0), []string{"ID"}, true, "")
+	userForm := core.NewFormFromModelFromGinContext(adminContext, core.MakeUser(), make([]string, 0), []string{"ID"}, true, "")
 	adminUserPage.Form = userForm
 	gomonolith.TestHTTPResponse(suite.T(), suite.App, req, func(w *httptest.ResponseRecorder) bool {
 		db := suite.Database.Db

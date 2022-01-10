@@ -90,6 +90,10 @@ func (b Blueprint) InitRouter(app core.IApp, group *gin.RouterGroup) {
 		cookie, _ := ctx.Cookie(cookieName)
 		session, _ := sessionAdapter.GetByKey(cookie)
 		user := session.GetUser()
+		if user == nil || (!user.GetIsSuperUser() && !user.GetIsStaff()) {
+			ctx.Redirect(302, core.GetURLToBackAfterSignin(ctx))
+			return
+		}
 		form1 := core.NewFormFromModelFromGinContext(c, user, make([]string, 0), []string{"Username", "FirstName", "LastName", "Email", "Photo", "LastLogin", "ExpiresOn", "OTPRequired"}, true, "")
 		form1.TemplateName = "form/profile_form"
 		c.F = form1

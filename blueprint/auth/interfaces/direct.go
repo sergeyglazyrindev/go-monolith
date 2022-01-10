@@ -226,6 +226,13 @@ var GetUserForAPI = func(user core.IUser) *gin.H {
 	return &gin.H{"name": user.GetUsername(), "id": user.GetID()}
 }
 
+var GetUserForAPIWithToken = func(user core.IUser, token *core.UserAuthToken) *gin.H {
+	if user == nil {
+		return &gin.H{}
+	}
+	return &gin.H{"name": user.GetUsername(), "id": user.GetID(), "token": token.Token}
+}
+
 func (ap *DirectAuthProvider) GetSession(c *gin.Context) core.ISessionProvider {
 	var cookieName string
 	cookieName = core.CurrentConfig.D.GoMonolith.APICookieName

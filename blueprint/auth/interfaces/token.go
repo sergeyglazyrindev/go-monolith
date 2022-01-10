@@ -5,6 +5,7 @@ import (
 	"github.com/asaskevich/govalidator"
 	"github.com/gin-gonic/gin"
 	utils2 "github.com/sergeyglazyrindev/go-monolith/blueprint/auth/utils"
+	sessionsblueprint "github.com/sergeyglazyrindev/go-monolith/blueprint/sessions"
 	user2 "github.com/sergeyglazyrindev/go-monolith/blueprint/user"
 	"github.com/sergeyglazyrindev/go-monolith/core"
 	"golang.org/x/crypto/bcrypt"
@@ -126,7 +127,8 @@ func (ap *TokenAuthProvider) Signin(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, core.APIBadResponseWithCode("no_token_has_been_created", "no token has been created"))
 		return
 	}
-	c.JSON(http.StatusOK, GetUserForAPI(&user))
+	d := GetUserForAPIWithToken(&user, userAuthToken)
+	c.JSON(http.StatusOK, d)
 }
 
 // swagger:route POST /auth/token/signup auth token tokenSignup
@@ -199,7 +201,8 @@ func (ap *TokenAuthProvider) Signup(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, core.APIBadResponseWithCode("no_token_has_been_created", "no token has been created"))
 		return
 	}
-	c.JSON(http.StatusOK, GetUserForAPI(&user))
+	d := GetUserForAPIWithToken(&user, userAuthToken)
+	c.JSON(http.StatusOK, d)
 }
 
 func (ap *TokenAuthProvider) Logout(c *gin.Context) {
@@ -207,11 +210,43 @@ func (ap *TokenAuthProvider) Logout(c *gin.Context) {
 }
 
 func (ap *TokenAuthProvider) IsAuthenticated(c *gin.Context) {
-	c.Status(http.StatusNoContent)
+	token := c.GetHeader("X-" + core.CurrentConfig.D.GoMonolith.APIToken)
+	if token == "" {
+		c.JSON(http.StatusBadRequest, core.APIBadResponse("no token header passed"))
+		return
+	}
+	db := core.NewDatabaseInstance()
+	defer db.Close()
+	tokenFromDb := &core.UserAuthToken{}
+	db.Db.Model(tokenFromDb).Preload("User").Where(&core.UserAuthToken{Token: token}).First(tokenFromDb)
+	if tokenFromDb.ID == 0 {
+		c.JSON(http.StatusBadRequest, core.APIBadResponse("wrong token passed"))
+		return
+	}
+	d := GetUserForAPIWithToken(&tokenFromDb.User, tokenFromDb)
+	c.JSON(http.StatusOK, d)
 }
 
 func (ap *TokenAuthProvider) GetSession(c *gin.Context) core.ISessionProvider {
-	return nil
+	var cookieName string
+	cookieName = core.CurrentConfig.D.GoMonolith.APICookieName
+	cookie, err := c.Cookie(cookieName)
+	if err != nil {
+		return nil
+	}
+	if cookie == "" {
+		return nil
+	}
+	sessionAdapterRegistry := sessionsblueprint.ConcreteBlueprint.SessionAdapterRegistry
+	sessionAdapter, _ := sessionAdapterRegistry.GetDefaultAdapter()
+	sessionAdapter, err = sessionAdapter.GetByKey(cookie)
+	if err != nil {
+		return nil
+	}
+	if sessionAdapter.IsExpired() {
+		return nil
+	}
+	return sessionAdapter
 }
 
 func (ap *TokenAuthProvider) GetName() string {

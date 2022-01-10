@@ -17,7 +17,7 @@ type AdminListFilterTestSuite struct {
 
 func (suite *AdminListFilterTestSuite) SetupTestData() {
 	for i := range core.GenerateNumberSequence(101, 200) {
-		userModel := core.GenerateUserModel()
+		userModel := core.MakeUser()
 		userModel.SetEmail(fmt.Sprintf("admin_%d@example.com", i))
 		userModel.SetUsername("admin_" + strconv.Itoa(i))
 		userModel.SetFirstName("firstname_" + strconv.Itoa(i))
@@ -34,7 +34,7 @@ func (suite *AdminListFilterTestSuite) TestFiltering() {
 	adminRequestParams := core.NewAdminRequestParams()
 	adminRequestParams.RequestURL = "http://127.0.0.1/?Username__exact=admin_101"
 	statement := &gorm.Statement{DB: suite.Database.Db}
-	statement.Parse(core.GenerateUserModel())
+	statement.Parse(core.MakeUser())
 	listFilter := &core.ListFilter{
 		URLFilteringParam: "Username__exact",
 	}

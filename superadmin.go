@@ -112,7 +112,7 @@ Please provide flags -n and -e which are username and email of the user respecti
 	if err != nil {
 		return err
 	}
-	admin := core.GenerateUserModel()
+	admin := core.MakeUser()
 	admin.SetFirstName(opts.FirstName)
 	admin.SetLastName(opts.LastName)
 	admin.SetUsername(opts.Username)

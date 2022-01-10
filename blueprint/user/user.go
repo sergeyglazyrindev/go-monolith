@@ -67,8 +67,8 @@ func (b Blueprint) InitRouter(app core.IApp, group *gin.RouterGroup) {
 		database := core.NewDatabaseInstance()
 		defer database.Close()
 		db := database.Db
-		user := core.GenerateUserModel()
-		db.Model(core.GenerateUserModel()).Where(&core.User{Email: json.Email}).First(user)
+		user := core.MakeUser()
+		db.Model(core.MakeUser()).Where(&core.User{Email: json.Email}).First(user)
 		if user.GetID() == 0 {
 			ctx.JSON(http.StatusBadRequest, core.APIBadResponseWithCode("user_not_found", "User with this email not found"))
 			return

@@ -1,6 +1,7 @@
 package sessions
 
 import (
+	"fmt"
 	"github.com/sergeyglazyrindev/go-monolith"
 	interfaces2 "github.com/sergeyglazyrindev/go-monolith/blueprint/sessions/interfaces"
 	"github.com/sergeyglazyrindev/go-monolith/core"
@@ -23,14 +24,20 @@ func (s *CsrfTestSuite) TestSuccessfulCsrfCheck() {
 	req, _ := http.NewRequest("POST", "/testcsrf/", nil)
 	tokenmasked := core.MaskCSRFToken(token)
 	req.Header.Set("CSRF-TOKEN", tokenmasked)
-	req.Header.Set("X-GO-MONOLITH-API", session.Key)
+	req.Header.Set(
+		"Cookie",
+		fmt.Sprintf("%s=%s", core.CurrentConfig.D.GoMonolith.AdminCookieName, session.Key),
+	)
 	gomonolith.TestHTTPResponse(s.T(), s.App, req, func(w *httptest.ResponseRecorder) bool {
 		assert.Equal(s.T(), w.Code, 200)
 		return w.Code == 200
 	})
 	req, _ = http.NewRequest("POST", "/testcsrf/", nil)
 	req.Header.Set("CSRF-TOKEN", "dsadsada")
-	req.Header.Set("X-GO-MONOLITH-API", session.Key)
+	req.Header.Set(
+		"Cookie",
+		fmt.Sprintf("%s=%s", core.CurrentConfig.D.GoMonolith.AdminCookieName, session.Key),
+	)
 	gomonolith.TestHTTPResponse(s.T(), s.App, req, func(w *httptest.ResponseRecorder) bool {
 		body := w.Body.String()
 		assert.Equal(s.T(), body, "Incorrect length of csrf-token")

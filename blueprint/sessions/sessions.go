@@ -39,14 +39,7 @@ func (b Blueprint) InitRouter(app core.IApp, group *gin.RouterGroup) {
 					csrfTokenFromRequest = c.PostForm("csrf-token")
 				}
 			}
-			serverKey = c.Request.Header.Get("X-" + strings.ToUpper(core.CurrentConfig.D.GoMonolith.APICookieName))
-			if serverKey == "" {
-				if c.Query("for-gomonolith-panel") == "1" || strings.Contains(c.Request.URL.String(), core.CurrentConfig.D.GoMonolith.RootAdminURL) {
-					serverKey, _ = c.Cookie(core.CurrentConfig.D.GoMonolith.AdminCookieName)
-				} else {
-					serverKey, _ = c.Cookie(core.CurrentConfig.D.GoMonolith.APICookieName)
-				}
-			}
+			serverKey, _ = c.Cookie(core.CurrentConfig.D.GoMonolith.AdminCookieName)
 			if serverKey == "" {
 				c.String(400, "No user session found")
 				c.Abort()
@@ -60,25 +53,24 @@ func (b Blueprint) InitRouter(app core.IApp, group *gin.RouterGroup) {
 				return
 			}
 			// @todo, comment it out when stabilize token
-			//csrfToken, err := session.Get("csrf_token")
-			//if err != nil {
-			//	c.String(400, err.Error())
-			//	c.Abort()
-			//	return
-			//}
+			csrfToken, err := session.Get("csrf_token")
+			if err != nil {
+				c.String(400, err.Error())
+				c.Abort()
+				return
+			}
 
 			if len(csrfTokenFromRequest) != 64 {
 				c.String(400, "Incorrect length of csrf-token")
 				c.Abort()
 				return
 			}
-			// @todo, comment it out when stabilize token
-			//tokenUnmasked := utils.UnmaskCSRFToken(csrfTokenFromRequest)
-			//if tokenUnmasked != csrfToken {
-			//	c.String(400, "Incorrect csrf-token")
-			//	c.Abort()
-			//	return
-			//}
+			tokenUnmasked := core.UnmaskCSRFToken(csrfTokenFromRequest)
+			if tokenUnmasked != csrfToken {
+				c.String(400, "Incorrect csrf-token")
+				c.Abort()
+				return
+			}
 			c.Next()
 		}
 	}())
@@ -88,26 +80,38 @@ func (b Blueprint) InitRouter(app core.IApp, group *gin.RouterGroup) {
 				c.Next()
 				return
 			}
-			contentType := c.Request.Header.Get("Content-Type")
-			if strings.Contains(contentType, "application/json") {
-				c.Next()
-				return
-			}
-			serverKey := c.Request.Header.Get("X-" + strings.ToUpper(core.CurrentConfig.D.GoMonolith.APICookieName))
+			serverKey, _ := c.Cookie(core.CurrentConfig.D.GoMonolith.AdminCookieName)
 			if serverKey == "" {
-				serverKey, _ = c.Cookie(core.CurrentConfig.D.GoMonolith.AdminCookieName)
-			}
-			if serverKey == "" {
-				c.Next()
+				if c.Request.URL.Path == core.CurrentConfig.D.GoMonolith.RootAdminURL+"/" {
+					c.Next()
+					return
+				}
+				if !strings.Contains(c.Request.URL.Path, "resetpassword") {
+					c.Redirect(302, core.GetURLToBackAfterSignin(c))
+					c.Abort()
+					return
+				}
 				return
 			}
 			defaultSessionAdapter, _ := b.SessionAdapterRegistry.GetDefaultAdapter()
 			session, _ := defaultSessionAdapter.GetByKey(serverKey)
 			if session == nil {
-				c.Next()
+				if c.Request.URL.Path == core.CurrentConfig.D.GoMonolith.RootAdminURL+"/" {
+					c.Next()
+					return
+				}
+				if !strings.Contains(c.Request.URL.Path, "resetpassword") {
+					c.Redirect(302, core.GetURLToBackAfterSignin(c))
+					c.Abort()
+					return
+				}
 				return
 			}
 			if session.IsExpired() && c.Request.URL.Path != core.CurrentConfig.D.GoMonolith.RootAdminURL+"/" {
+				if c.Request.URL.Path == core.CurrentConfig.D.GoMonolith.RootAdminURL+"/" {
+					c.Next()
+					return
+				}
 				if !strings.Contains(c.Request.URL.Path, "resetpassword") {
 					c.Redirect(302, core.GetURLToBackAfterSignin(c))
 					c.Abort()
@@ -116,6 +120,10 @@ func (b Blueprint) InitRouter(app core.IApp, group *gin.RouterGroup) {
 			}
 			user := session.GetUser()
 			if c.Request.URL.Path != core.CurrentConfig.D.GoMonolith.RootAdminURL+"/" && (user == nil || (!user.GetIsStaff() && !user.GetIsSuperUser())) {
+				if c.Request.URL.Path == core.CurrentConfig.D.GoMonolith.RootAdminURL+"/" {
+					c.Next()
+					return
+				}
 				if !strings.Contains(c.Request.URL.Path, "resetpassword") {
 					c.Redirect(302, core.GetURLToBackAfterSignin(c))
 					c.Abort()

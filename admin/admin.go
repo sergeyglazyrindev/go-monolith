@@ -85,7 +85,7 @@ func init() {
 		context.SetBreadCrumbs(breadcrumbs)
 		context.SetAdminRequestParams(adminRequestParams)
 	}
-	core.GenerateUserModel = func() core.IUser {
+	core.MakeUser = func() core.IUser {
 		return &core.User{}
 	}
 }
